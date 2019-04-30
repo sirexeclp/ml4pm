@@ -1,6 +1,6 @@
 # blocklist
 branches:
-  except: /^untagged/
+  only: master
 dist: xenial
 language: python
 cache: pip
