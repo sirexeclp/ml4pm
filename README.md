@@ -1,5 +1,5 @@
 # ml-in-prec-med
-
+[![Build Status](https://travis-ci.com/sirexeclp/ml-in-prec-med.svg?branch=master)](https://travis-ci.com/sirexeclp/ml-in-prec-med)
 ## Workflow
 
 Work on local your branch (e.g. `your-name`).
