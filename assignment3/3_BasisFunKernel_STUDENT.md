@@ -33,6 +33,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Ridge
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.testing import assert_almost_equal
 ```
 
 ```python
@@ -170,6 +171,8 @@ rmse_train, rmse_valid, best_a = tune_ridge(X_train, y_train, X_valid, y_valid, 
 
 print('best alpha:       {}'.format(best_a))
 print('validation error: {:.4f}'.format(np.min(rmse_valid)))
+assert_almost_equal(best_a, 1e-06, 7, "best_a does not match expected value")
+assert_almost_equal(rmse_valid, 0.4851, 4, "validation error does not match expected value")
 ```
 
 **Expected Output**:  
@@ -212,6 +215,7 @@ def evaluate_ridge(X_train, y_train, X_test, y_test, a):
 # we evaluate the function for the best value of a you found above
 y_hat_test, error = evaluate_ridge(X_train, y_train, X_test, y_test, best_a)
 print('test error: {:.4f}'.format(error))
+assert_almost_equal(error, 0.5401, 4, "test error does not match expected value")
 ```
 
 **Expected Output:**  
@@ -264,8 +268,13 @@ def rbf(x, mu, s):
 ```
 
 ```python
-print('Sigmoid :\n{:.2f}\t{:.2f}\t{:.2f}'.format(sigmoid(0.5,1,0.5),sigmoid(1.,1.,0.5),sigmoid(3.,1.,0.5)))
-print('Gaussian:\n{:.2f}\t{:.2f}\t{:.2f}'.format(rbf(0.5,1,0.5),rbf(1,1,0.5),rbf(3,1,0.5)))
+sigmoids = [sigmoid(0.5,1,0.5),sigmoid(1.,1.,0.5),sigmoid(3.,1.,0.5)]
+gaussians = [rbf(0.5,1,0.5),rbf(1,1,0.5),rbf(3,1,0.5)]
+print('Sigmoid :\n{:.2f}\t{:.2f}\t{:.2f}'.format(*sigmoids))
+print('Gaussian:\n{:.2f}\t{:.2f}\t{:.2f}'.format(*gaussians))
+assert_almost_equal(sigmoids, [0.27, 0.50, 0.98], 2, "sigmoids do not match expected values")
+assert_almost_equal(gaussians, [0.61, 1.00, 0.00], 2, "gaussians do not match expected values")
+
 ```
 
 ** Expected Output:**  
@@ -457,6 +466,8 @@ K_linear = #your_code
 
 print('shape:     {}'.format(K_linear.shape))
 print('a1: {}'.format(get_a(K_linear, 0.01, y_train)[0]))
+assert_almost_equal(K_linear.shape, (802, 802), 1, "shape does not match expected value")
+assert_almost_equal(get_a(K_linear, 0.01, y_train)[0], [-6.00066083] , 8, "al does not match expected value")
 ```
 
 **Expected Output:**  
