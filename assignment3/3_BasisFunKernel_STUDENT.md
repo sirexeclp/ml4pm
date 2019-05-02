@@ -76,7 +76,7 @@ We define our independent/dependent variables for the machine learning problem, 
 ```python
 # Set dependent and independent variables 
 dep_var = ['charges']
-indep_var = ['age','bmi','children','sex_female','smoker_yes','region_northwest','region_southeast','region_southwest']
+indep_var = set(data.columns) - set(dep_var)
 
 # standardize the data 
 def zscore(x):
@@ -137,7 +137,8 @@ The function tune_ridge() should return
 <!-- #endregion -->
 
 ```python
-def tune_ridge(X_train, y_train, X_valid, y_valid, A):
+from typing import List
+def tune_ridge(X_train, y_train, X_valid, y_valid, A) -> (list,list,float):
     # A is the list of values we want to use as our regularization parameter
   
     rmse_train=[]
@@ -145,22 +146,23 @@ def tune_ridge(X_train, y_train, X_valid, y_valid, A):
   
     for a in A:
         #initialize your model and fit
-        model = #your_code
+        model = Ridge(alpha=a, solver="lsqr", normalize=False)
+        model.fit(X_train, y_train)
   
         #get predictions with model.predict()
-        y_pred_valid = #your_code
-        y_pred_train = #your_code
+        y_pred_valid = model.predict(X_valid)
+        y_pred_train = model.predict(X_train)
       
         #calculate the rmse with your function rmse() from above
-        valid_error = #your_code
-        train_error = #your_code
+        valid_error = rmse(y_valid,y_pred_valid)
+        train_error = rmse(y_train,y_pred_train)
       
         #append() the calculated predictions and errors to rmse_train and rmse_valid
-        #your_code
-        #your_code
+        rmse_valid.append(valid_error)
+        rmse_train.append(train_error)
   
     #get the best alpha from A resulting in the minimum validation error. 
-    best_a = #your_code
+    best_a = float(A[np.argmin(rmse_valid)])
       
     return rmse_train, rmse_valid, best_a
 ```
@@ -169,10 +171,11 @@ def tune_ridge(X_train, y_train, X_valid, y_valid, A):
 # Call the ridge regression function above
 rmse_train, rmse_valid, best_a = tune_ridge(X_train, y_train, X_valid, y_valid, A)
 
+validation_error=np.min(rmse_valid)
 print('best alpha:       {}'.format(best_a))
-print('validation error: {:.4f}'.format(np.min(rmse_valid)))
+print('validation error: {:.4f}'.format(validation_error))
 assert_almost_equal(best_a, 1e-06, 7, "best_a does not match expected value")
-assert_almost_equal(rmse_valid, 0.4851, 4, "validation error does not match expected value")
+assert_almost_equal(validation_error, 0.4851, 4, "validation error does not match expected value")
 ```
 
 **Expected Output**:  
@@ -194,9 +197,12 @@ Judging from the plot above, does your model seem to over-fit? (yes/no)
 
 Why do you think this is the case? (1 sentence)
 
-```
+<!-- #region -->
+No.
 
-```
+
+Since validation error is even below training error for our chosen alpha.
+<!-- #endregion -->
 
 ## Task 2:  
 
@@ -207,9 +213,10 @@ At the end, the function should return the predictions on the test set and the c
 
 ```python
 def evaluate_ridge(X_train, y_train, X_test, y_test, a):
-  
-    #your_code (~3 lines)
-  
+    model = Ridge(alpha=a, solver="lsqr", normalize=False)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    error = rmse(y_test,y_pred)
     return y_pred, error
 
 # we evaluate the function for the best value of a you found above
@@ -223,7 +230,7 @@ test error: 0.5401
 
 ```python
 # we plot the residuals vs. y (true values)
-plt.scatter(y_test, y_pred_test - y_test)
+plt.scatter(y_test, y_hat_test - y_test)
 plt.xlabel('y_test')
 plt.ylabel('y_pred_test - y_test')
 plt.show()
