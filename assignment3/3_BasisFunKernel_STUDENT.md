@@ -265,12 +265,12 @@ s:  $s$ (float)
 
 ```python
 def sigmoid(x, mu, s):
-    a = #your_code
-    sig = #your_code
+    a = (x-mu)/s
+    sig = 1/(1+np.exp(-a))
     return sig
 
 def rbf(x, mu, s):
-    r = #your_code
+    r = np.exp(-((x-mu)**2)/(2*s**2))
     return r
 ```
 
@@ -319,9 +319,8 @@ plot_transform(np.linspace(-2,2,num=100), mu=[-1,0,1,0], s=[0.2, 0.2, 0.2, 1.], 
 What do the mu and s parameters control for the sigmoid and the Gaussian basis functions?
 
 
-```python
 
-```
+Mu controlls the mean so translation on the x axis, while s controlls the steepnes or spread (variance).
 
 <!-- #region -->
 Below we've implemented a function `transform_data(df, cols, M, S, func)` that allows you to compute transformations of your input variables using the basis functions which you implemented above, where:
