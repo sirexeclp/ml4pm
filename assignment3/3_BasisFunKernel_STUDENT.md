@@ -272,12 +272,12 @@ s:  $s$ (float)
 
 ```python
 def sigmoid(x, mu, s):
-    a = #your_code
-    sig = #your_code
+    a = (x - mu) / s
+    sig = 1 / (1+ np.e**(-a))
     return sig
 
 def rbf(x, mu, s):
-    r = #your_code
+    r = np.exp (- ((x - mu) ** 2) / (2 * (s** 2)))
     return r
 ```
 
