@@ -361,7 +361,7 @@ Pick the basis function you want to use, replace `#your_code` with `sigmoid` or 
 M = M
 S = S
 
-func = #your_code 
+func = rbf
 
 data_transform = transform_data(data, indep_var, M, S, func)
 
@@ -452,8 +452,8 @@ $$ \mathbf a = (\mathbf K + \lambda \mathbf I)^{-1}\mathbf y$$
 hint: np.linalg.inv(), np.eye(), dot() 
 
 ```python
-def get_a(K, lambd, y):
-    return #your_code
+def get_a(K: np.ndarray, lambd: float, y: np.ndarray):
+    return np.linalg.inv(K + lambd*np.identity(len(K))).dot(y)
 ```
 
 ## Task 6:
@@ -467,13 +467,12 @@ Compute the kernel matrix `K_linear`, for the data matrix `X_train`:
 
 ```python
 #Student version
-
-K_linear = #your_code
-
-print('shape:     {}'.format(K_linear.shape))
-print('a1: {}'.format(get_a(K_linear, 0.01, y_train)[0]))
+K_linear = X_train.dot(X_train.T)
+a = get_a(K_linear, 0.01, y_train)[0]
+print('shape: {}'.format(K_linear.shape))
+print('a1: {}'.format(a))
 assert_almost_equal(K_linear.shape, (802, 802), 1, "shape does not match expected value")
-assert_almost_equal(get_a(K_linear, 0.01, y_train)[0], [-6.00066083] , 8, "al does not match expected value")
+assert_almost_equal(a, [-6.00066083] , 8, "al does not match expected value")
 ```
 
 **Expected Output:**  
@@ -522,25 +521,29 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     K = pairwise_kernels(X_train, metric=metric)
     
     for lambd in L:
-        a = # your_code     
-        k_xstar = # your_code
-        y_hat_train = # your_code
-        y_hat_valid = # your_code
+        a = get_a(K,lambd,y_train)
+        k_xstar = pairwise_kernels(X_valid, X_train, metric=metric)
+        y_hat_train = K.T.dot(a)
+        y_hat_valid = k_xstar.dot(a)
         
-        train_err = # your_code
-        valid_err = # your_code
+        train_err = rmse(y_train, y_hat_train)
+        valid_err = rmse(y_valid, y_hat_valid)
         
         rmse_train.append(train_err)
         rmse_valid.append(valid_err)
     
-    best_lambd = # your_code
+    best_lambd = np.argmin(rmse_valid)
     
     return rmse_train, rmse_valid, best_lambd
 ```
 
 ```python
+
+```
+
+```python
 # we define the range of lambda-values to loop over:
-L = 10. ** np.linspace(start=3., stop=-4, num=100)
+L = 10. ** np.linspace(start=5., stop=-4, num=100)
 
 # and calculate the errors of the kernel regression models
 res_Klin = tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear')
@@ -578,7 +581,7 @@ And now, let's compare the rmses on the validation sets from linear and RBF kern
 ```python
 # we plot the train and validation performances
 plt.plot(-1*np.log10(np.array(L)), res_Klin[1], '-g', label='valid error Klin')
-plt.plot(-1*np.log10(np.array(L)), res_Krbf[1], '-r', label='valid error Krbf')
+plt.plot(-1*np.log10(np.array(L)), res_Krbf[1], '-b', label='valid error Krbf')
 plt.xlabel('-log10(lambda)')
 plt.ylabel('RMSE')
 plt.title('linear vs rbf kernel')
@@ -648,7 +651,3 @@ As this is also the first time for us preparing this tutorial, you are welcome t
 Thank you!  
 
 Jana & Remo
-
-```python
-
-```
