@@ -55,6 +55,10 @@ Instead, we will create "dummy-variables" for each of these values. Again taking
 We use the pandas function `pandas.get_dummies()` to convert the categorical variables to their one-hot representations.
 
 ```python
+list(data_orig.columns)
+```
+
+```python
 # 1-hot encoding for the categorical variables
 data = pd.get_dummies(data, columns=['region','smoker','sex'])
 print('old variables: {}'.format(list(data_orig.columns)))
@@ -105,11 +109,15 @@ X = data[indep_var].values
 y = data[dep_var].values
 
 # split in to train, validation and test sets
+# Train 60, Test 20, Valid
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=2)
 X_valid, X_test, y_valid, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=2)
 
 # we will perform hyper-parameter search over this range of values:
 A = 10. ** np.linspace(start=3., stop=-6, num=100)
+
+#print(np.linspace(start=3., stop=-6, num=100))
+#print(A)
 
 # we will use the root mean squared error to assess performance:
 def rmse(y, y_hat):
@@ -145,22 +153,23 @@ def tune_ridge(X_train, y_train, X_valid, y_valid, A):
   
     for a in A:
         #initialize your model and fit
-        model = #your_code
+        model = Ridge(alpha=a, solver='lsqr', normalize=False)
+        model.fit(X_train, y_train)
   
         #get predictions with model.predict()
-        y_pred_valid = #your_code
-        y_pred_train = #your_code
+        y_pred_valid = model.predict(X_valid)
+        y_pred_train = model.predict(X_train)
       
         #calculate the rmse with your function rmse() from above
-        valid_error = #your_code
-        train_error = #your_code
+        valid_error = rmse(y_valid,y_pred_valid)
+        train_error = rmse(y_train, y_pred_train)
       
         #append() the calculated predictions and errors to rmse_train and rmse_valid
-        #your_code
-        #your_code
+        rmse_train.append(train_error)
+        rmse_valid.append(valid_error)
   
     #get the best alpha from A resulting in the minimum validation error. 
-    best_a = #your_code
+    best_a = A[np.argmin(rmse_valid)]
       
     return rmse_train, rmse_valid, best_a
 ```
@@ -172,7 +181,7 @@ rmse_train, rmse_valid, best_a = tune_ridge(X_train, y_train, X_valid, y_valid, 
 print('best alpha:       {}'.format(best_a))
 print('validation error: {:.4f}'.format(np.min(rmse_valid)))
 assert_almost_equal(best_a, 1e-06, 7, "best_a does not match expected value")
-assert_almost_equal(rmse_valid, 0.4851, 4, "validation error does not match expected value")
+assert_almost_equal(np.min(rmse_valid), 0.4851, 4, "validation error does not match expected value")
 ```
 
 **Expected Output**:  
