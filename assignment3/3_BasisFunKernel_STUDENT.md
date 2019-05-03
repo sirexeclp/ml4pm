@@ -369,7 +369,7 @@ Pick the basis function you want to use, replace `#your_code` with `sigmoid` or 
 M = M
 S = S
 
-func = #your_code 
+func = sigmoid
 
 data_transform = transform_data(data, indep_var, M, S, func)
 
