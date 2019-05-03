@@ -461,7 +461,7 @@ hint: np.linalg.inv(), np.eye(), dot()
 
 ```python
 def get_a(K, lambd, y):
-    return #your_code
+    return np.dot((K + np.linalg.inv((np.dot(lambd, np.eye)))), y)
 ```
 
 ## Task 6:
