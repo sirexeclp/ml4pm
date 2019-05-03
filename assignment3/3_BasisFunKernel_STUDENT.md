@@ -204,7 +204,8 @@ Judging from the plot above, does your model seem to over-fit? (yes/no)
 Why do you think this is the case? (1 sentence)
 
 ```
-
+No.   
+Because the validation error goes down alongside the training error, and does not go up again. If the validation error goes up, then we would be overfitting.
 ```
 
 ## Task 2:  
@@ -217,7 +218,11 @@ At the end, the function should return the predictions on the test set and the c
 ```python
 def evaluate_ridge(X_train, y_train, X_test, y_test, a):
   
-    #your_code (~3 lines)
+    model = Ridge(alpha=a, solver='lsqr', normalize=False)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    
+    error = rmse(y_test,y_pred)
   
     return y_pred, error
 
@@ -232,7 +237,7 @@ test error: 0.5401
 
 ```python
 # we plot the residuals vs. y (true values)
-plt.scatter(y_test, y_pred_test - y_test)
+plt.scatter(y_test, y_hat_test - y_test)
 plt.xlabel('y_test')
 plt.ylabel('y_pred_test - y_test')
 plt.show()
