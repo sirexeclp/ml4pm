@@ -532,7 +532,7 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
         rmse_train.append(train_err)
         rmse_valid.append(valid_err)
     
-    best_lambd = np.argmin(rmse_valid)
+    best_lambd = L[np.argmin(rmse_valid)]
     
     return rmse_train, rmse_valid, best_lambd
 ```
