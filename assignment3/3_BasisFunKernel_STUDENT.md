@@ -267,12 +267,12 @@ s:  $s$ (float)
 
 ```python
 def sigmoid(x, mu, s):
-    a = #your_code
-    sig = #your_code
+    a = (x-mu) / s
+    sig = 1 / (1 + np.exp(-a))
     return sig
 
 def rbf(x, mu, s):
-    r = #your_code
+    r = np.exp(-(((x-mu) ** 2) / (2 * (s ** 2))))
     return r
 ```
 
@@ -322,7 +322,12 @@ What do the mu and s parameters control for the sigmoid and the Gaussian basis f
 
 
 ```python
-
+Sigmoid: 
+    mu controls the point where the sigmoid function is at y=0.5 (does the slope change here?)
+    s controls the slope
+Gaussian basis function:
+    mu controls the maximum of the function
+    s controls the variance
 ```
 
 <!-- #region -->
