@@ -527,7 +527,7 @@ hint: np.linalg.inv(), np.eye(), dot()
 
 ```python
 def get_a(K, lambd, y):
-    return #your_code
+    return (np.linalg.inv(K + lambd * np.eye(K.shape[1])).dot(y))
 ```
 
 ## Task 6:
@@ -542,7 +542,7 @@ Compute the kernel matrix `K_linear`, for the data matrix `X_train`:
 ```python
 #Student version
 
-K_linear = #your_code
+K_linear = X_train.dot(X_train.transpose())
 
 print('shape:     {}'.format(K_linear.shape))
 print('a1: {}'.format(get_a(K_linear, 0.01, y_train)[0]))
