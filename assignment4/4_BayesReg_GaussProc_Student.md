@@ -119,9 +119,9 @@ $$\mu^* = \mathbf{K_{X^*,X}}[\mathbf{K_{X,X}}+\sigma^2 \mathbf I]^{-1} \mathbf y
 
 See how the formula above relates to how we made predictions with our kernelized ridge regression model. What is the interpretation of $\sigma^2$?
 
-```
-the variance of our model weights, used to be lambda!
-```
+
+This formula corresponds to the kernelized ridge regression in that it shows the multiplication of a with the kernel matirx. The main difference is, that the regularisation parameter ${\lambda}$ is replaced here with ${\sigma^2}$.
+
 
 The covariance matrix ${\Sigma^*}$ is calculated the following way:
 
@@ -144,7 +144,14 @@ It returns `mu_star` and `sigma_star` defined above.
 ```python
 def predictive_Gauss(X,y,X_star, metric, sigma_sq):
     
-    # your_code
+    K_xst_x = pairwise_kernels(X_star, X, metric=metric)
+    K_x_x = pairwise_kernels(X, metric=metric)
+    K_xst_xst = pairwise_kernels(X_star, metric=metric)
+    K_x_xst = pairwise_kernels(X, X_star, metric=metric)
+    
+    mu_star = K_xst_x.dot(np.linalg.inv(K_x_x + sigma_sq * np.eye(K_x_x.shape[1])).dot(y))
+    
+    sigma_star = K_xst_xst - (K_xst_x.dot(np.linalg.inv(K_x_x + sigma_sq * np.eye(K_x_x.shape[1])).dot(K_x_xst)))
     
     return mu_star, sigma_star
 ```
@@ -152,9 +159,8 @@ def predictive_Gauss(X,y,X_star, metric, sigma_sq):
 **Question: **  
 What is the shape of $\Sigma^*$ if you predict for $N$ new observations? How can you retrieve the variance of a single prediction $y^*_i$ from $\Sigma^*$?
 
-```
+
 ... write your answer here ...
-```
 
 ```python
 best_lambd = 0.15199110829529347
@@ -168,7 +174,7 @@ print('No expected output this time! ;)')
 Retrieve the standard deviation for each all predictions $\mathbf{y}^*$ (`sigma_star`):
 
 ```python
-standard_deviations = #your_code
+standard_deviations = sigma_star
 ```
 
 ```python
