@@ -569,6 +569,31 @@ How does the function behave, if x and x' are very similar or different?
 
 
 
+```python
+# we plot the train and validation performances
+x_val = np.random.randint(low=-10, high=10, size=100)
+#x_3_h = np.random.rand(low=-1, high=1, size=100)
+x_3_h = np.random.random(100)
+x_1 = [x - 0.1 for x in x_val]
+x_2 = [x - 5 for x in x_val]
+x_3 = [x - y for x,y in zip(x_val, x_3_h)]
+x_4 = [x - 8 for x in x_val]
+
+def function(x, x_prime):
+    return np.exp(-((np.absolute(x-x_prime) ** 2) / 2 * (0.5 ** 2))) 
+
+plt.scatter(x_val, (function(x_val, x_1)), label="small difference")
+plt.scatter(x_val, (function(x_val, x_2)), label="large difference")
+plt.scatter(x_val, (function(x_val, x_4)), label="very large difference")
+plt.scatter(x_val, (function(x_val, x_3)), label="random difference")
+
+plt.legend(loc='upper right')
+plt.show()
+```
+
+```python
+With more similar values the result of the formula is closer to 1, the less similar the values are, the closer the result goes to 0.
+```
 
 In order to predict $y$ for new observations, we have to calculate the pairwise kernel between the new observations and the original observations. The kernel vector $k(x^*)$ is defined as the vector of inner $k(x^*, x_N )$ products of $\mathbf Φ(x^*)$ with all training data points in matrix $\mathbf Φ$.
 
