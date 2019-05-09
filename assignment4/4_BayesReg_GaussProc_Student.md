@@ -7,7 +7,7 @@ jupyter:
       format_version: '1.1'
       jupytext_version: 1.1.1
   kernelspec:
-    display_name: Python 3
+    display_name: Python [default]
     language: python
     name: python3
 ---

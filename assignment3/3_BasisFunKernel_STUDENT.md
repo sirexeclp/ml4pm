@@ -197,10 +197,10 @@ Judging from the plot above, does your model seem to over-fit? (yes/no)
 
 Why do you think this is the case? (1 sentence)
 
-```
+
 No.
 Because the validation error is lower than the training error.
-```
+
 
 ## Task 2:  
 
@@ -321,14 +321,16 @@ plot_transform(np.linspace(-2,2,num=100), mu=[-1,0,1,0], s=[0.2, 0.2, 0.2, 1.], 
 What do the mu and s parameters control for the sigmoid and the Gaussian basis functions?
 
 
-```python
+
 Sigmoid: 
-    mu controls the point where the sigmoid function is at y=0.5 (does the slope change here?)
-    s controls the slope
+
+- mu controls the point where the sigmoid function is at y=0.5 (does the slope change here?)
+- s controls the slope
+
 Gaussian basis function:
-    mu controls the maximum of the function
-    s controls the variance
-```
+
+- mu controls the maximum of the function
+- s controls the variance
 
 <!-- #region -->
 Below we've implemented a function `transform_data(df, cols, M, S, func)` that allows you to compute transformations of your input variables using the basis functions which you implemented above, where:
@@ -570,9 +572,8 @@ How does the function behave, if x and x' are very similar or different?
 
 
 ```python
-# we plot the train and validation performances
+# plot the RBF Kernel for x and x' with small and big difference
 x_val = np.random.randint(low=-10, high=10, size=100)
-#x_3_h = np.random.rand(low=-1, high=1, size=100)
 x_3_h = np.random.random(100)
 x_1 = [x - 0.1 for x in x_val]
 x_2 = [x - 5 for x in x_val]
@@ -591,9 +592,8 @@ plt.legend(loc='upper right')
 plt.show()
 ```
 
-```python
 With more similar values the result of the formula is closer to 1, the less similar the values are, the closer the result goes to 0.
-```
+
 
 In order to predict $y$ for new observations, we have to calculate the pairwise kernel between the new observations and the original observations. The kernel vector $k(x^*)$ is defined as the vector of inner $k(x^*, x_N )$ products of $\mathbf Φ(x^*)$ with all training data points in matrix $\mathbf Φ$.
 
@@ -622,9 +622,9 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     
     for lambd in L:
         a = get_a(K, lambd, y_train)     
-        k_xstar = pairwise_kernels(X_train, Y=X_valid, metric=metric)
+        k_xstar = pairwise_kernels(X_valid, Y=X_train, metric=metric)
         
-        y_hat_train = K.dot(a)
+        y_hat_train = K.T.dot(a)
         y_hat_valid = k_xstar.dot(a)
         
         train_err = rmse(y_train, y_hat_train)
@@ -715,6 +715,10 @@ Look at the performance graphs and test errors above. What can you say about the
 
 
 
+
+
+The RBF kernel regression performs better, it has a lower test error with the optimal lambda than the regression with the linear kernel. <br>
+In addition the RBF kernel performs well enough, to overfit, this means, that the RBF kernel fits the training data well enough, that it can perfectly represented with it. Although we don't want the algorithm to overfit, it is an encouraging sign, that overfitting is possible. (I assume that this is correct, no idea though)
 
 
 Success! we have finally managed to improve performance compared to the original linear model!
