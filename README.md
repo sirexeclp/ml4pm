@@ -1,5 +1,6 @@
 # ml-in-prec-med
 [![Build Status](https://travis-ci.com/sirexeclp/ml-in-prec-med.svg?branch=master)](https://travis-ci.com/sirexeclp/ml-in-prec-med)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/sirexeclp/ml4pm/master)
 ## Workflow
 
 Work on local your branch (e.g. `your-name`).
