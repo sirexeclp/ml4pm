@@ -142,11 +142,14 @@ Complete the function `predictive_Gauss` below. It takes the following parameter
 It returns `mu_star` and `sigma_star` defined above.
 
 ```python
-def predictive_Gauss(X,y,X_star, metric, sigma_sq):
-    
-    # your_code
-    
-    return mu_star, sigma_star
+def predictive_Gauss(X:np.ndarray,y:np.ndarray,X_star:np.ndarray, metric:str, sigma_sq:float):
+    k = pairwise_kernels(X)
+    k_xstar = pairwise_kernels(X_star,X)
+    k_xstart2 = pairwise_kernels(X_star,X_star)
+    k_xxstar = pairwise_kernels(X,X_star)
+    mu_star = k_xstar.dot(np.linalg.inv(k+sigma_sq*np.eye(len(y))).dot(y))
+    sigma_star = k_xstart2 - k_xstar.dot(np.linalg.inv(k+sigma_sq*np.eye(len(y)))).dot(k_xxstar)
+    return (mu_star, sigma_star)
 ```
 
 **Question: **  
@@ -168,7 +171,7 @@ print('No expected output this time! ;)')
 Retrieve the standard deviation for each all predictions $\mathbf{y}^*$ (`sigma_star`):
 
 ```python
-standard_deviations = #your_code
+standard_deviations = np.std(sigma_star)
 ```
 
 ```python
