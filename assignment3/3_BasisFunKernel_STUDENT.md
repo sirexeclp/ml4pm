@@ -364,12 +364,78 @@ S = np.array([5.,2.,1.,0.5,0.25,0.1,0.01])
 ## Task 4: 
 Pick the basis function you want to use, replace `#your_code` with `sigmoid` or `rbf`
 
+
+a) With Sigmoid
+
 ```python
 # feel free to replace M and S with your own values and play around, or use the default we gave above:
 M = M
 S = S
 
-func = #your_code 
+func = sigmoid 
+
+data_transform = transform_data(data, indep_var, M, S, func)
+
+print( 'number of basis functions: {}'.format(len(M)*len(S)))
+print( 'data_transform.shape:      {}'.format(data_transform.shape ))
+```
+
+Now that we transformed the original independent variables with our function of choice, we can perform a regression on our set of transformed variables. 
+
+```python
+# define the training set again:
+X = data_transform.values
+y = data[dep_var].values
+
+# split in to train, validation and test sets (we use the same random state as above)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=2)
+X_valid, X_test, y_valid, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=2)
+
+# different values for alpha
+A = 10. ** np.linspace(start=4., stop=-6, num=100)
+
+# fit the model:
+# depending on how you picked the parameters above, this could be a bit slow
+rmse_train, rmse_valid, best_a = tune_ridge(X_train, y_train, X_valid, y_valid, A)
+
+print('best alpha:       {}'.format(best_a))
+print('validation error: {:.4f}'.format(np.min(rmse_valid)))
+```
+
+```python
+# we plot the train and validation performances
+plt.plot(-1*np.log10(np.array(A)), rmse_train, '-b', label='train error')
+plt.plot(-1*np.log10(np.array(A)), rmse_valid, '-r', label='valid error')
+plt.xlabel('-log10(a)')
+plt.ylabel('RMSE')
+plt.legend(loc='upper right')
+plt.show()
+```
+
+```python
+# we evaluate the function for the best value of 'a' you found above
+y_hat_test, error = evaluate_ridge(X_train, y_train, X_test, y_test, best_a)
+y_hat_basis_function = y_hat_test
+
+print('test error: {:.4f}'.format(error))
+```
+
+```python
+# we plot the residuals vs. y
+plt.scatter(y_test, y_hat_test - y_test)
+plt.xlabel('y_test')
+plt.ylabel('y_hat - y_test')
+plt.show()
+```
+
+b) With Gaussian basis functions
+
+```python
+# feel free to replace M and S with your own values and play around, or use the default we gave above:
+M = M
+S = S
+
+func = rbf 
 
 data_transform = transform_data(data, indep_var, M, S, func)
 
