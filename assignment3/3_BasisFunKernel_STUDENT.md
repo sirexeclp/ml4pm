@@ -7,9 +7,9 @@ jupyter:
       format_version: '1.1'
       jupytext_version: 1.1.1
   kernelspec:
-    display_name: Python 3
+    display_name: Python (ml_in_prec_med)
     language: python
-    name: python3
+    name: ml_in_prec_med
 ---
 
 # Tutorial 3 - Basis functions and kernel regression
@@ -172,7 +172,7 @@ rmse_train, rmse_valid, best_a = tune_ridge(X_train, y_train, X_valid, y_valid, 
 print('best alpha:       {}'.format(best_a))
 print('validation error: {:.4f}'.format(np.min(rmse_valid)))
 assert_almost_equal(best_a, 1e-06, 7, "best_a does not match expected value")
-assert_almost_equal(rmse_valid, 0.4851, 4, "validation error does not match expected value")
+assert_almost_equal(np.min(rmse_valid), 0.4851, 4, "validation error does not match expected value")
 ```
 
 **Expected Output**:  
@@ -223,7 +223,7 @@ test error: 0.5401
 
 ```python
 # we plot the residuals vs. y (true values)
-plt.scatter(y_test, y_pred_test - y_test)
+plt.scatter(y_test, y_hat_test - y_test)
 plt.xlabel('y_test')
 plt.ylabel('y_pred_test - y_test')
 plt.show()
