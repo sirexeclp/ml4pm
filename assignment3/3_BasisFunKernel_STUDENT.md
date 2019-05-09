@@ -211,9 +211,14 @@ At the end, the function should return the predictions on the test set and the c
 
 ```python
 def evaluate_ridge(X_train, y_train, X_test, y_test, a):
-  
-    #your_code (~3 lines)
-  
+    
+    model = Ridge(alpha=a, solver='lsqr', normalize=False)
+    model.fit(X_train, y_train)
+    
+    y_pred = model.predict(X_test)
+    
+    error = rmse(y_pred, y_test)
+    
     return y_pred, error
 
 # we evaluate the function for the best value of a you found above
