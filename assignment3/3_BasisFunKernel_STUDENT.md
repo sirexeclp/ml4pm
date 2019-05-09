@@ -621,18 +621,20 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     K = pairwise_kernels(X_train, metric=metric)
     
     for lambd in L:
-        a = # your_code     
-        k_xstar = # your_code
-        y_hat_train = # your_code
-        y_hat_valid = # your_code
+        a = get_a(K, lambd, y_train)     
+        k_xstar = pairwise_kernels(X_train, Y=X_valid, metric=metric)
         
-        train_err = # your_code
-        valid_err = # your_code
+        y_hat_train = K.dot(a)
+        y_hat_valid = k_xstar.dot(a)
+        
+        train_err = rmse(y_train, y_hat_train)
+        valid_err = rmse(y_valid, y_hat_valid)
         
         rmse_train.append(train_err)
         rmse_valid.append(valid_err)
     
-    best_lambd = # your_code
+    min_err_ind = rmse_valid.index(min(rmse_valid))
+    best_lambd = L[min_err_ind]
     
     return rmse_train, rmse_valid, best_lambd
 ```
