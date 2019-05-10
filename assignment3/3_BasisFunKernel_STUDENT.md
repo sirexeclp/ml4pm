@@ -627,7 +627,7 @@ Look at the performance graphs and test errors above. What can you say about the
 
 
 The RBF kernel regression performs better, it has a lower test error with the optimal lambda than the regression with the linear kernel.
-In addition the RBF kernel performs well enough, to overfit, this means, that the RBF kernel fits the training data well enough, that it can be perfectly represented with it. Although we don't want the algorithm to overfit, it is an encouraging sign, that overfitting is possible. (I assume that this is correct, no idea though)
+In addition the RBF kernel performs well enough to overfit. This means that the RBF kernel fits the training data well enough, that it can be represented with it. Although we don't want the algorithm to overfit, it is an encouraging sign, that overfitting is possible.
 
 
 Success! we have finally managed to improve performance compared to the original linear model!
