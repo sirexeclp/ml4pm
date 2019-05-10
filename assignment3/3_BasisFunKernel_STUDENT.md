@@ -601,6 +601,8 @@ eval_Krbf = evaluate_kernel_regression(X_train, y_train, X_test, y_test, res_Krb
 
 print('test error linear kernel: {:.4f}'.format(eval_Klin[1]))
 print('test error rbf kernel:    {:.4f}'.format(eval_Krbf[1]))
+assert_almost_equal(eval_Klin[1], 0.5401, 4, "Test error of linear kernel does not match expected value!")
+assert_almost_equal(eval_Krbf[1], 0.4403, 4, "Test error of rbf kernel does not match expected value!")
 ```
 
 **Question 4:**
