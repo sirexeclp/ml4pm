@@ -329,6 +329,7 @@ What do the mu and s parameters control for the sigmoid and the Gaussian basis f
 
 mu: location of basis functions in input space
 s: governs spacial scale of basis functions
+Mu controls the mean so translation on the x axis, while s controls the steepness or spread (variance).
 
 <!-- #region -->
 Below we've implemented a function `transform_data(df, cols, M, S, func)` that allows you to compute transformations of your input variables using the basis functions which you implemented above, where:
