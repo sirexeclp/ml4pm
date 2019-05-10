@@ -55,6 +55,10 @@ Instead, we will create "dummy-variables" for each of these values. Again taking
 We use the pandas function `pandas.get_dummies()` to convert the categorical variables to their one-hot representations.
 
 ```python
+list(data_orig.columns)
+```
+
+```python
 # 1-hot encoding for the categorical variables
 data = pd.get_dummies(data, columns=['region','smoker','sex'])
 print('old variables: {}'.format(list(data_orig.columns)))
@@ -105,11 +109,15 @@ X = data[indep_var].values
 y = data[dep_var].values
 
 # split in to train, validation and test sets
+# Train 60, Test 20, Valid
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=2)
 X_valid, X_test, y_valid, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=2)
 
 # we will perform hyper-parameter search over this range of values:
 A = 10. ** np.linspace(start=3., stop=-6, num=100)
+
+#print(np.linspace(start=3., stop=-6, num=100))
+#print(A)
 
 # we will use the root mean squared error to assess performance:
 def rmse(y, y_hat):
@@ -145,22 +153,23 @@ def tune_ridge(X_train, y_train, X_valid, y_valid, A):
   
     for a in A:
         #initialize your model and fit
-        model = #your_code
+        model = Ridge(alpha=a, solver='lsqr', normalize=False)
+        model.fit(X_train, y_train)
   
         #get predictions with model.predict()
-        y_pred_valid = #your_code
-        y_pred_train = #your_code
+        y_pred_valid = model.predict(X_valid)
+        y_pred_train = model.predict(X_train)
       
         #calculate the rmse with your function rmse() from above
-        valid_error = #your_code
-        train_error = #your_code
+        valid_error = rmse(y_valid,y_pred_valid)
+        train_error = rmse(y_train, y_pred_train)
       
         #append() the calculated predictions and errors to rmse_train and rmse_valid
-        #your_code
-        #your_code
+        rmse_train.append(train_error)
+        rmse_valid.append(valid_error)
   
     #get the best alpha from A resulting in the minimum validation error. 
-    best_a = #your_code
+    best_a = A[np.argmin(rmse_valid)]
       
     return rmse_train, rmse_valid, best_a
 ```
@@ -172,7 +181,7 @@ rmse_train, rmse_valid, best_a = tune_ridge(X_train, y_train, X_valid, y_valid, 
 print('best alpha:       {}'.format(best_a))
 print('validation error: {:.4f}'.format(np.min(rmse_valid)))
 assert_almost_equal(best_a, 1e-06, 7, "best_a does not match expected value")
-assert_almost_equal(rmse_valid, 0.4851, 4, "validation error does not match expected value")
+assert_almost_equal(np.min(rmse_valid), 0.4851, 4, "validation error does not match expected value")
 ```
 
 **Expected Output**:  
@@ -195,7 +204,8 @@ Judging from the plot above, does your model seem to over-fit? (yes/no)
 Why do you think this is the case? (1 sentence)
 
 ```
-
+No.   
+Because the validation error goes down alongside the training error, and does not go up again. If the validation error goes up, then we would be overfitting.
 ```
 
 ## Task 2:  
@@ -208,7 +218,11 @@ At the end, the function should return the predictions on the test set and the c
 ```python
 def evaluate_ridge(X_train, y_train, X_test, y_test, a):
   
-    #your_code (~3 lines)
+    model = Ridge(alpha=a, solver='lsqr', normalize=False)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    
+    error = rmse(y_test,y_pred)
   
     return y_pred, error
 
@@ -223,7 +237,7 @@ test error: 0.5401
 
 ```python
 # we plot the residuals vs. y (true values)
-plt.scatter(y_test, y_pred_test - y_test)
+plt.scatter(y_test, y_hat_test - y_test)
 plt.xlabel('y_test')
 plt.ylabel('y_pred_test - y_test')
 plt.show()
@@ -258,12 +272,12 @@ s:  $s$ (float)
 
 ```python
 def sigmoid(x, mu, s):
-    a = #your_code
-    sig = #your_code
+    a = (x - mu) / s
+    sig = 1 / (1+ np.e**(-a))
     return sig
 
 def rbf(x, mu, s):
-    r = #your_code
+    r = np.exp (- ((x - mu) ** 2) / (2 * (s** 2)))
     return r
 ```
 
@@ -312,9 +326,9 @@ plot_transform(np.linspace(-2,2,num=100), mu=[-1,0,1,0], s=[0.2, 0.2, 0.2, 1.], 
 What do the mu and s parameters control for the sigmoid and the Gaussian basis functions?
 
 
-```python
 
-```
+mu: location of basis functions in input space
+s: governs spacial scale of basis functions
 
 <!-- #region -->
 Below we've implemented a function `transform_data(df, cols, M, S, func)` that allows you to compute transformations of your input variables using the basis functions which you implemented above, where:
@@ -355,7 +369,7 @@ Pick the basis function you want to use, replace `#your_code` with `sigmoid` or 
 M = M
 S = S
 
-func = #your_code 
+func = sigmoid
 
 data_transform = transform_data(data, indep_var, M, S, func)
 
@@ -447,7 +461,7 @@ hint: np.linalg.inv(), np.eye(), dot()
 
 ```python
 def get_a(K, lambd, y):
-    return #your_code
+    return np.linalg.inv(K + lambd * np.eye(len(K))).dot(y)
 ```
 
 ## Task 6:
@@ -462,7 +476,7 @@ Compute the kernel matrix `K_linear`, for the data matrix `X_train`:
 ```python
 #Student version
 
-K_linear = #your_code
+K_linear = np.dot(X_train, np.transpose(X_train))
 
 print('shape:     {}'.format(K_linear.shape))
 print('a1: {}'.format(get_a(K_linear, 0.01, y_train)[0]))
@@ -516,20 +530,21 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     K = pairwise_kernels(X_train, metric=metric)
     
     for lambd in L:
-        a = # your_code     
-        k_xstar = # your_code
-        y_hat_train = # your_code
-        y_hat_valid = # your_code
+        a = get_a(K, lambd, y_train)  
+        k_xstar = pairwise_kernels(X_valid, X_train, metric=metric)
+        y_hat_train = K.T.dot(a)
+        y_hat_valid = k_xstar.dot(a)
         
-        train_err = # your_code
-        valid_err = # your_code
+        train_err = rmse(y_train, y_hat_train)
+        valid_err = rmse(y_valid, y_hat_valid)
         
         rmse_train.append(train_err)
         rmse_valid.append(valid_err)
     
-    best_lambd = # your_code
+    best_lambd = L[np.argmin(rmse_valid)]
     
     return rmse_train, rmse_valid, best_lambd
+
 ```
 
 ```python
@@ -594,6 +609,7 @@ def evaluate_kernel_regression(X_train, y_train, X_test, y_test, best_lambd, met
     error = rmse(y_test, y_hat)
     
     return y_hat, error
+
 
 # we evaluate the function for the best value of a that you you found above
 eval_Klin = evaluate_kernel_regression(X_train, y_train, X_test, y_test, res_Klin[2], metric='linear')
