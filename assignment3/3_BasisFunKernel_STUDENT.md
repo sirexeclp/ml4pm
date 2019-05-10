@@ -326,9 +326,9 @@ plot_transform(np.linspace(-2,2,num=100), mu=[-1,0,1,0], s=[0.2, 0.2, 0.2, 1.], 
 What do the mu and s parameters control for the sigmoid and the Gaussian basis functions?
 
 
-```python
 
-```
+mu: location of basis functions in input space
+s: governs spacial scale of basis functions
 
 <!-- #region -->
 Below we've implemented a function `transform_data(df, cols, M, S, func)` that allows you to compute transformations of your input variables using the basis functions which you implemented above, where:
@@ -531,40 +531,20 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     
     for lambd in L:
         a = get_a(K, lambd, y_train)  
-        k_xstar = # your_code
-        y_hat_train = 
-        y_hat_valid = # your_code
+        k_xstar = pairwise_kernels(X_valid, X_train, metric=metric)
+        y_hat_train = K.T.dot(a)
+        y_hat_valid = k_xstar.dot(a)
         
-        train_err = rmse(y_hat)
-        valid_err = # your_code
+        train_err = rmse(y_train, y_hat_train)
+        valid_err = rmse(y_valid, y_hat_valid)
         
         rmse_train.append(train_err)
         rmse_valid.append(valid_err)
     
-    best_lambd = # your_code
+    best_lambd = L[np.argmin(rmse_valid)]
     
     return rmse_train, rmse_valid, best_lambd
 
-
-# for a in A:
-#         #initialize your model and fit
-#         model = Ridge(alpha=a, solver='lsqr', normalize=False)
-#         model.fit(X_train, y_train)
-  
-#         #get predictions with model.predict()
-#         y_pred_valid = model.predict(X_valid)
-#         y_pred_train = model.predict(X_train)
-      
-#         #calculate the rmse with your function rmse() from above
-#         valid_error = rmse(y_valid,y_pred_valid)
-#         train_error = rmse(y_train, y_pred_train)
-      
-#         #append() the calculated predictions and errors to rmse_train and rmse_valid
-#         rmse_train.append(train_error)
-#         rmse_valid.append(valid_error)
-  
-#     #get the best alpha from A resulting in the minimum validation error. 
-#     best_a = A[np.argmin(rmse_valid)]
 ```
 
 ```python
