@@ -461,7 +461,7 @@ hint: np.linalg.inv(), np.eye(), dot()
 
 ```python
 def get_a(K, lambd, y):
-    return np.linalg.inv(K + lambd * np.eye(K)).dot(y)
+    return np.linalg.inv(K + lambd * np.eye(len(K))).dot(y)
 ```
 
 ## Task 6:
@@ -480,8 +480,8 @@ K_linear = np.dot(X_train, np.transpose(X_train))
 
 print('shape:     {}'.format(K_linear.shape))
 print('a1: {}'.format(get_a(K_linear, 0.01, y_train)[0]))
-#assert_almost_equal(K_linear.shape, (802, 802), 1, "shape does not match expected value")
-#assert_almost_equal(get_a(K_linear, 0.01, y_train)[0], [-6.00066083] , 8, "al does not match expected value")
+assert_almost_equal(K_linear.shape, (802, 802), 1, "shape does not match expected value")
+assert_almost_equal(get_a(K_linear, 0.01, y_train)[0], [-6.00066083] , 8, "al does not match expected value")
 ```
 
 **Expected Output:**  
@@ -530,12 +530,12 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     K = pairwise_kernels(X_train, metric=metric)
     
     for lambd in L:
-        a = # your_code     
+        a = get_a(K, lambd, y_train)  
         k_xstar = # your_code
-        y_hat_train = # your_code
+        y_hat_train = 
         y_hat_valid = # your_code
         
-        train_err = # your_code
+        train_err = rmse(y_hat)
         valid_err = # your_code
         
         rmse_train.append(train_err)
@@ -544,6 +544,27 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     best_lambd = # your_code
     
     return rmse_train, rmse_valid, best_lambd
+
+
+# for a in A:
+#         #initialize your model and fit
+#         model = Ridge(alpha=a, solver='lsqr', normalize=False)
+#         model.fit(X_train, y_train)
+  
+#         #get predictions with model.predict()
+#         y_pred_valid = model.predict(X_valid)
+#         y_pred_train = model.predict(X_train)
+      
+#         #calculate the rmse with your function rmse() from above
+#         valid_error = rmse(y_valid,y_pred_valid)
+#         train_error = rmse(y_train, y_pred_train)
+      
+#         #append() the calculated predictions and errors to rmse_train and rmse_valid
+#         rmse_train.append(train_error)
+#         rmse_valid.append(valid_error)
+  
+#     #get the best alpha from A resulting in the minimum validation error. 
+#     best_a = A[np.argmin(rmse_valid)]
 ```
 
 ```python
@@ -608,6 +629,7 @@ def evaluate_kernel_regression(X_train, y_train, X_test, y_test, best_lambd, met
     error = rmse(y_test, y_hat)
     
     return y_hat, error
+
 
 # we evaluate the function for the best value of a that you you found above
 eval_Klin = evaluate_kernel_regression(X_train, y_train, X_test, y_test, res_Klin[2], metric='linear')
