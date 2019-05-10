@@ -1,5 +1,5 @@
 # ml-in-prec-med
-[![Build Status](https://travis-ci.com/sirexeclp/ml-in-prec-med.svg?branch=master)](https://travis-ci.com/sirexeclp/ml-in-prec-med)
+[![Build Status](https://travis-ci.com/sirexeclp/ml4pm.svg?branch=master)](https://travis-ci.com/sirexeclp/ml4pm)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/sirexeclp/ml4pm/master)
 ## Workflow
 
