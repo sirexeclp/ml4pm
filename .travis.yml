@@ -28,6 +28,7 @@ script:
 #   - git push --quiet --set-upstream origin-pages build
 
 deploy:
+  skip_cleanup: true
   provider: script
   script: deploy.sh
   on:
