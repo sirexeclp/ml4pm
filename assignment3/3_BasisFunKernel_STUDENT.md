@@ -490,7 +490,7 @@ The RBF Kernel of two samples x and x' is defined as $$K(\mathbf{x},\mathbf{x'})
 
 **Question 3:**  
 How does the function behave, if x and x' are very similar or different?
-
+If $x$ and $x'$ are similar the function will get close to 1. If they differ it well be below 1.
 
 
 
