@@ -147,8 +147,9 @@ def predictive_Gauss(X:np.ndarray,y:np.ndarray,X_star:np.ndarray, metric:str, si
     k_xstar = pairwise_kernels(X_star,X, metric=metric)
     k_xstart2 = pairwise_kernels(X_star,X_star, metric=metric)
     k_xxstar = pairwise_kernels(X,X_star, metric=metric)
-    mu_star = k_xstar.dot(np.linalg.inv(k+sigma_sq*np.eye(len(y))).dot(y))
-    sigma_star = k_xstart2 - k_xstar.dot(np.linalg.inv(k+sigma_sq*np.eye(len(y)))).dot(k_xxstar)
+    inner_product = k_xstar.dot(np.linalg.inv(k+sigma_sq*np.eye(len(y))))
+    mu_star = inner_product.dot(y)
+    sigma_star = inner_product.dot(k_xxstar)
     return (mu_star, sigma_star)
 ```
 
