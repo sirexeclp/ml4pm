@@ -167,6 +167,8 @@ def predictive_Gauss(X,y,X_star, metric, sigma_sq):
     #calculate mu_star: mean of predictive distribution
     mu_star = K_xstar_x.dot(np.linalg.inv(K + sigma_sq*np.eye(len(K)))).dot(y)
 
+    print(len(K))
+    print(len(y))
     #calculate sigma_star: covariance matrix
     sigma_star = K_xstar_xstar - K_xstar_x.dot(np.linalg.inv(K + sigma_sq * np.eye(len(K)))).dot(K_x_xstar)
 
@@ -185,7 +187,13 @@ What is the shape of $\Sigma^*$ if you predict for $N$ new observations? How can
 Shape of $\Sigma^*$: (268, 268), which is $N$ * $N$, where $N$ is a number of new observations
 
 To retrieve variance of a single prediction $y^*_i$ from $\Sigma^*$:  
-Retrieve values from the diagonal of the covariance matrix sigma_star.
+
+Retrieve values from the diagonal of the covariance matrix sigma_star, where the covariance of a single y with a single y equals the variance of that y.
+
+```python
+#for example: variance of y_1
+sigma_star[1,1]
+```
 
 ```python
 best_lambd = 0.15199110829529347
