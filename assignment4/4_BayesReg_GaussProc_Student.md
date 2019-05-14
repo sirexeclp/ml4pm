@@ -141,10 +141,38 @@ Complete the function `predictive_Gauss` below. It takes the following parameter
 
 It returns `mu_star` and `sigma_star` defined above.
 
+
+$$\Sigma^* =  \mathbf{K_{X^*,X^*}} - \mathbf{K_{X^*,X}}[\mathbf{K_{X,X}}+\sigma^2 \mathbf I]^{-1}\; \mathbf{K_{X,X^*}}$$
+
+$$\mu^* = \mathbf{K_{X^*,X}}[\mathbf{K_{X,X}}+\sigma^2 \mathbf I]^{-1} \mathbf y$$
+
 ```python
 def predictive_Gauss(X,y,X_star, metric, sigma_sq):
     
-    # your_code
+    assert type(X) == np.ndarray
+    assert type(y) == np.ndarray
+    assert type(X_star) == np.ndarray
+    assert type(sigma_sq) == float
+    
+    #training data corresponds in size
+    assert X.shape[0] == y.shape[0]
+    assert X.shape[1] == X_star.shape[1]
+
+    K = pairwise_kernels(X, metric=metric)
+    K_xstar_x = pairwise_kernels(X_star, X, metric=metric)
+    K_xstar_xstar = pairwise_kernels(X_star, X_star, metric=metric)
+    K_x_xstar = pairwise_kernels(X, X_star, metric=metric)
+    
+    #calculate mu_star: mean of predictive distribution
+    mu_star = K_xstar_x.dot(np.linalg.inv(K + sigma_sq*np.eye(len(K)))).dot(y)
+
+    #calculate sigma_star: covariance matrix
+    sigma_star = K_xstar_xstar - K_xstar_x.dot(np.linalg.inv(K + sigma_sq * np.eye(len(K)))).dot(K_x_xstar)
+
+#     print(f'shape of sigma star: {sigma_star.shape}')
+#     print(f'shape of X: {X.shape}')
+#     print(f'shape of y: {y.shape}')
+#     print(f'shape of X_star: {X_star.shape}')
     
     return mu_star, sigma_star
 ```
@@ -152,23 +180,35 @@ def predictive_Gauss(X,y,X_star, metric, sigma_sq):
 **Question: **  
 What is the shape of $\Sigma^*$ if you predict for $N$ new observations? How can you retrieve the variance of a single prediction $y^*_i$ from $\Sigma^*$?
 
-```
-... write your answer here ...
+
+Shape of $\Sigma^*$: (268, 268), which is $N$ * $N$, where $N$ is a number of new observations
+
+To retrieve variance of a single prediction $y^*_i$ from $\Sigma^*$:  
+
+Retrieve values from the diagonal of the covariance matrix sigma_star, where the covariance of a single y with a single y equals the variance of that y.
+
+```python
+#for example: variance of y_1
+sigma_star[1,1]
 ```
 
 ```python
 best_lambd = 0.15199110829529347
 mu_star, sigma_star = predictive_Gauss(X_train,y_train,X_test, 'rbf', best_lambd)
 
-print('mu_star[10]: {}\nsigma_star[10,10]: {}'.format(mu_star[10],sigma_star[10,10]))
+print('\nmu_star[10]: {}\nsigma_star[10,10]: {}'.format(mu_star[10],sigma_star[10,10]))
 print('No expected output this time! ;)')
+```
+
+```python
+print(sigma_star)
 ```
 
 ## Task 2: ## 
 Retrieve the standard deviation for each all predictions $\mathbf{y}^*$ (`sigma_star`):
 
 ```python
-standard_deviations = #your_code
+standard_deviations = np.sqrt(np.diagonal(sigma_star))
 ```
 
 ```python
