@@ -74,8 +74,9 @@ Implement the logistic sigmoid following the formula above. We have to make sure
 
 ```python
 def logistic(a):
-    logist = # your_code
-    logist = # your_code
+    logist = np.exp(a)/(1+np.exp(a))
+    eta = 10**-6
+    logist = np.clip(a, 0+eta, 1-eta)
     return logist
 ```
 
