@@ -29,6 +29,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import util
+from numpy.testing import assert_almost_equal
 ```
 
 For this exercise, we have outsourced some functions, which we frequently use in a second python script 'util.py'. 
@@ -114,7 +115,9 @@ def logloss(y, y_hat):
 ```
 
 ```python
-logloss(np.array([0.,1.,1.]), np.array([0.1, 0.5, 0.99]))
+loss = logloss(np.array([0.,1.,1.]), np.array([0.1, 0.5, 0.99]))
+print(f"logloss: {loss}")
+assert_almost_equal(loss, 0.80855803207127308, 17, "log loss does not match expected value!")
 ```
 
 ** Expected output **:
