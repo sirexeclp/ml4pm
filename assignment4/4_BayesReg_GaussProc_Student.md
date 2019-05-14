@@ -187,10 +187,7 @@ To retrieve variance of a single prediction $y^*_i$ from $\Sigma^*$:
 
 Retrieve values from the diagonal of the covariance matrix sigma_star, where the covariance of a single y with a single y equals the variance of that y.
 
-```python
-#for example: variance of y_1
-sigma_star[1,1]
-```
+for example: variance of y_1: `sigma_star[1,1]`
 
 ```python
 best_lambd = 0.15199110829529347
