@@ -55,6 +55,10 @@ Instead, we will create "dummy-variables" for each of these values. Again taking
 We use the pandas function `pandas.get_dummies()` to convert the categorical variables to their one-hot representations.
 
 ```python
+list(data_orig.columns)
+```
+
+```python
 # 1-hot encoding for the categorical variables
 data = pd.get_dummies(data, columns=['region','smoker','sex'])
 print('old variables: {}'.format(list(data_orig.columns)))
@@ -105,11 +109,15 @@ X = data[indep_var].values
 y = data[dep_var].values
 
 # split in to train, validation and test sets
+# Train 60, Test 20, Valid
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=2)
 X_valid, X_test, y_valid, y_test = train_test_split(X_test, y_test, test_size=0.5, random_state=2)
 
 # we will perform hyper-parameter search over this range of values:
 A = 10. ** np.linspace(start=3., stop=-6, num=100)
+
+#print(np.linspace(start=3., stop=-6, num=100))
+#print(A)
 
 # we will use the root mean squared error to assess performance:
 def rmse(y, y_hat):
@@ -146,7 +154,7 @@ def tune_ridge(X_train, y_train, X_valid, y_valid, A) -> (list,list,float):
   
     for a in A:
         #initialize your model and fit
-        model = Ridge(alpha=a, solver="lsqr", normalize=False)
+        model = Ridge(alpha=a, solver='lsqr', normalize=False)
         model.fit(X_train, y_train)
   
         #get predictions with model.predict()
@@ -155,14 +163,14 @@ def tune_ridge(X_train, y_train, X_valid, y_valid, A) -> (list,list,float):
       
         #calculate the rmse with your function rmse() from above
         valid_error = rmse(y_valid,y_pred_valid)
-        train_error = rmse(y_train,y_pred_train)
+        train_error = rmse(y_train, y_pred_train)
       
         #append() the calculated predictions and errors to rmse_train and rmse_valid
-        rmse_valid.append(valid_error)
         rmse_train.append(train_error)
+        rmse_valid.append(valid_error)
   
     #get the best alpha from A resulting in the minimum validation error. 
-    best_a = float(A[np.argmin(rmse_valid)])
+    best_a = A[np.argmin(rmse_valid)]
       
     return rmse_train, rmse_valid, best_a
 ```
@@ -175,7 +183,7 @@ validation_error=np.min(rmse_valid)
 print('best alpha:       {}'.format(best_a))
 print('validation error: {:.4f}'.format(validation_error))
 assert_almost_equal(best_a, 1e-06, 7, "best_a does not match expected value")
-assert_almost_equal(validation_error, 0.4851, 4, "validation error does not match expected value")
+assert_almost_equal(np.min(rmse_valid), 0.4851, 4, "validation error does not match expected value")
 ```
 
 **Expected Output**:  
@@ -197,12 +205,10 @@ Judging from the plot above, does your model seem to over-fit? (yes/no)
 
 Why do you think this is the case? (1 sentence)
 
-<!-- #region -->
-No.
-
-
-Since validation error is even below training error for our chosen alpha.
-<!-- #endregion -->
+```
+No.   
+Because the validation error goes down alongside the training error, and does not go up again. If the validation error goes up, then we would be overfitting.
+```
 
 ## Task 2:  
 
@@ -213,10 +219,13 @@ At the end, the function should return the predictions on the test set and the c
 
 ```python
 def evaluate_ridge(X_train, y_train, X_test, y_test, a):
-    model = Ridge(alpha=a, solver="lsqr", normalize=False)
+  
+    model = Ridge(alpha=a, solver='lsqr', normalize=False)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
+    
     error = rmse(y_test,y_pred)
+  
     return y_pred, error
 
 # we evaluate the function for the best value of a you found above
@@ -265,12 +274,12 @@ s:  $s$ (float)
 
 ```python
 def sigmoid(x, mu, s):
-    a = (x-mu)/s
-    sig = 1/(1+np.exp(-a))
+    a = (x - mu) / s
+    sig = 1 / (1+ np.e**(-a))
     return sig
 
 def rbf(x, mu, s):
-    r = np.exp(-((x-mu)**2)/(2*s**2))
+    r = np.exp (- ((x - mu) ** 2) / (2 * (s** 2)))
     return r
 ```
 
@@ -320,7 +329,9 @@ What do the mu and s parameters control for the sigmoid and the Gaussian basis f
 
 
 
-Mu controlls the mean so translation on the x axis, while s controlls the steepnes or spread (variance).
+mu: location of basis functions in input space
+s: governs spacial scale of basis functions
+Mu controls the mean so translation on the x axis, while s controls the steepness or spread (variance).
 
 <!-- #region -->
 Below we've implemented a function `transform_data(df, cols, M, S, func)` that allows you to compute transformations of your input variables using the basis functions which you implemented above, where:
@@ -361,7 +372,7 @@ Pick the basis function you want to use, replace `#your_code` with `sigmoid` or 
 M = M
 S = S
 
-func = rbf
+func = sigmoid
 
 data_transform = transform_data(data, indep_var, M, S, func)
 
@@ -452,8 +463,8 @@ $$ \mathbf a = (\mathbf K + \lambda \mathbf I)^{-1}\mathbf y$$
 hint: np.linalg.inv(), np.eye(), dot() 
 
 ```python
-def get_a(K: np.ndarray, lambd: float, y: np.ndarray):
-    return np.linalg.inv(K + lambd*np.identity(len(K))).dot(y)
+def get_a(K, lambd, y):
+    return np.linalg.inv(K + lambd * np.eye(len(K))).dot(y)
 ```
 
 ## Task 6:
@@ -467,10 +478,11 @@ Compute the kernel matrix `K_linear`, for the data matrix `X_train`:
 
 ```python
 #Student version
-K_linear = X_train.dot(X_train.T)
-a = get_a(K_linear, 0.01, y_train)[0]
-print('shape: {}'.format(K_linear.shape))
-print('a1: {}'.format(a))
+
+K_linear = np.dot(X_train, np.transpose(X_train))
+
+print('shape:     {}'.format(K_linear.shape))
+print('a1: {}'.format(get_a(K_linear, 0.01, y_train)[0]))
 assert_almost_equal(K_linear.shape, (802, 802), 1, "shape does not match expected value")
 assert_almost_equal(a, [-6.00066083] , 8, "al does not match expected value")
 ```
@@ -490,8 +502,8 @@ The RBF Kernel of two samples x and x' is defined as $$K(\mathbf{x},\mathbf{x'})
 
 **Question 3:**  
 How does the function behave, if x and x' are very similar or different?
-If $x$ and $x'$ are similar the function will get close to 1. If they differ it well be below 1.
 
+If $x$ and $x'$ are similar the function will get close to 1. If they differ it well be below 1.
 
 
 
@@ -521,7 +533,7 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     K = pairwise_kernels(X_train, metric=metric)
     
     for lambd in L:
-        a = get_a(K,lambd,y_train)
+        a = get_a(K, lambd, y_train)  
         k_xstar = pairwise_kernels(X_valid, X_train, metric=metric)
         y_hat_train = K.T.dot(a)
         y_hat_valid = k_xstar.dot(a)
@@ -535,6 +547,7 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     best_lambd = L[np.argmin(rmse_valid)]
     
     return rmse_train, rmse_valid, best_lambd
+
 ```
 
 ```python
@@ -604,6 +617,7 @@ def evaluate_kernel_regression(X_train, y_train, X_test, y_test, best_lambd, met
     
     return y_hat, error
 
+
 # we evaluate the function for the best value of a that you you found above
 eval_Klin = evaluate_kernel_regression(X_train, y_train, X_test, y_test, res_Klin[2], metric='linear')
 eval_Krbf = evaluate_kernel_regression(X_train, y_train, X_test, y_test, res_Krbf[2], metric='rbf')
@@ -618,7 +632,8 @@ assert_almost_equal(eval_Krbf[1], 0.4403, 4, "Test error of rbf kernel does not 
 Look at the performance graphs and test errors above. What can you say about the performances of linear and rbf kernel regressions? Which one performed better?
 
 
-
+The RBF kernel regression performs better, it has a lower test error with the optimal lambda than the regression with the linear kernel.
+In addition the RBF kernel performs well enough to overfit. This means that the RBF kernel fits the training data well enough, that it can be represented with it. Although we don't want the algorithm to overfit, it is an encouraging sign, that overfitting is possible.
 
 
 Success! we have finally managed to improve performance compared to the original linear model!

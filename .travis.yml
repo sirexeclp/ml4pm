@@ -18,11 +18,18 @@ script:
 #   draft: true
 #   on:
 #       branch: test/jupytext
-after_success:
-  - git config --global user.email ${EMAIL}
-  - git config --global user.name ${USER}
-  - git checkout build
-  - git add *.ipynb
-  - "git commit --message \"[skip travis] Travis build: ${TRAVIS_BUILD_NUMBER}\""
-  - git remote add origin-pages https://${TOKEN}@github.com/sirexeclp/ml-in-prec-med.git > /dev/null 2>&1
-  - git push --quiet --set-upstream origin-pages build
+# after_success:
+#   - git config --global user.email ${EMAIL}
+#   - git config --global user.name ${USER}
+#   - git checkout build
+#   - git add *.ipynb
+#   - "git commit --message \"[skip travis] Travis build: ${TRAVIS_BUILD_NUMBER}\""
+#   - git remote add origin-pages https://${TOKEN}@github.com/sirexeclp/ml-in-prec-med.git > /dev/null 2>&1
+#   - git push --quiet --set-upstream origin-pages build
+
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: bash deploy.sh
+  on:
+    branch: master

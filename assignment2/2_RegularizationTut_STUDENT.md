@@ -276,7 +276,7 @@ x_valid, x_test, y_valid, y_test = train_test_split(x_test, y_test, test_size=0.
 Fit your model on `X_train` and `y_train` using your `least_squares`-function from above:
 <!-- #endregion -->
 
-```python colab={} colab_type="code" id="MlBC_rnPBrAh"
+```python
 theta = least_squares(x_train,y_train)
 ```
 
@@ -527,9 +527,9 @@ DiabetesPedigreeFunction: 0.126
 Age: 0.150
 <!-- #endregion -->
 
-```python colab={} colab_type="code" id="z9MBa6SYBrBn"
+```python
 # we can also visualize the best parameters with a bar-plot:
-plt.bar(var_label, theta[:,0])
+plt.bar(var_label, best_theta[:,0])
 plt.xticks(rotation='vertical')
 plt.show()
 ```
