@@ -167,15 +167,13 @@ def predictive_Gauss(X,y,X_star, metric, sigma_sq):
     #calculate mu_star: mean of predictive distribution
     mu_star = K_xstar_x.dot(np.linalg.inv(K + sigma_sq*np.eye(len(K)))).dot(y)
 
-    print(len(K))
-    print(len(y))
     #calculate sigma_star: covariance matrix
     sigma_star = K_xstar_xstar - K_xstar_x.dot(np.linalg.inv(K + sigma_sq * np.eye(len(K)))).dot(K_x_xstar)
 
-    print(f'shape of sigma star: {sigma_star.shape}')
-    print(f'shape of X: {X.shape}')
-    print(f'shape of y: {y.shape}')
-    print(f'shape of X_star: {X_star.shape}')
+#     print(f'shape of sigma star: {sigma_star.shape}')
+#     print(f'shape of X: {X.shape}')
+#     print(f'shape of y: {y.shape}')
+#     print(f'shape of X_star: {X_star.shape}')
     
     return mu_star, sigma_star
 ```
