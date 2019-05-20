@@ -77,7 +77,8 @@ Implement the logistic sigmoid following the formula above. We have to make sure
 def logistic(a):
     logist = np.exp(a)/(1+np.exp(a))
     eta = 10**-6
-    logist = np.clip(a, 0+eta, 1-eta)
+    logist = np.clip(logist
+                     , 0+eta, 1-eta)
     return logist
 ```
 
@@ -108,7 +109,7 @@ def logloss(y, y_hat):
     y_hat -- scalar or numpy array
     """
 
-    loss = #your_code
+    loss = - np.sum(np.log(logistic(y_hat[y == 1]))) - np.sum(np.log(1-logistic(y_hat[y == 0])))
     
     return loss
     
@@ -116,7 +117,7 @@ def logloss(y, y_hat):
 
 ```python
 loss = logloss(np.array([0.,1.,1.]), np.array([0.1, 0.5, 0.99]))
-print(f"logloss: {loss}")
+print(f"logloss: {loss:.17f}")
 assert_almost_equal(loss, 0.80855803207127308, 17, "log loss does not match expected value!")
 ```
 
@@ -138,13 +139,13 @@ def regularizer(w, lambd):
     '''
     return the value for the regularizer for a given w and lamd
     ''' 
-    reg = # your_code
+    reg = lambd * 0.5 * np.sum(w**2)
     return reg
 ```
 
 ### The derivative
 
-In order to minimize our objective function, we will make use of the derivative. The derivative will tell us in which direction we have to adjust our weights, in order to minimize the loss. Note that no analytical solition exists. Instead, we will have to optimize our objective using an optimization algorithm (see below). The derivative of the objective with respect to a single $w_d$ is defined as follows:
+In order to minimize our objective function, we will make use of the derivative. The derivative will tell us in which direction we have to adjust our weights, in order to minimize the loss. Note that no analytical solution exists. Instead, we will have to optimize our objective using an optimization algorithm (see below). The derivative of the objective with respect to a single $w_d$ is defined as follows:
 
 \begin{equation}
 \frac{\partial L}{\partial w_d} = \sum_n^{N}{x_{nd}} \cdot
@@ -217,17 +218,22 @@ class Steepest_descent_optimizer():
         
         self.w = np.zeros(X.shape[1]) # we initialize the weights with zeros
         
-        self.max_iter = 10000 # set the max number of iterations
+        self.max_iter = 10_000 # set the max number of iterations
     
     def _gradient(self):
-        # calculate the gradient of w 
-        # your_code
+        test = logistic(self.X.dot(self.w.T))
+        test2 = np.array(self.y == 1)# np.eye(self.y.shape[0])[self.y == 1]
+        #print(test.shape)
+        #print(test2.shape)
+        loss = self.X.T.dot(test - test2 )
+        reg = self.lambd * self.w.T
+        grad = loss + reg
         return grad
     
     def _update(self):
         grad = self._gradient()
         # update the weights using the gradient and learning rate
-        self.w =  # your_code
+        self.w -= self.alpha*grad
         
     def predict(self, X):
         return logistic(X.dot(self.w))
@@ -237,13 +243,13 @@ class Steepest_descent_optimizer():
         loss = []
         # we iterate until we reach self.max_iter
         while it < self.max_iter:
-            # update the weights (use the method you implemented above)
-            # append the current loss (use self.predict, and the regularizer(), and logloss() functions)
-            
-            # your_code
-            
-            loss.append(# your_code
+            self._update()
+            y_hat = self.predict(self.X)
+            l = logloss(self.y,y_hat) + regularizer(self.w, self.lambd)
+            loss.append(l)
             it += 1
+            if it % 100 == 0:
+                print("#", end='')
         return loss
 ```
 
@@ -252,7 +258,7 @@ class Steepest_descent_optimizer():
 optimizer = Steepest_descent_optimizer(X_train, y_train, lambd = 0.001, alpha = 0.001)
 
 # run the optimization for 10000 steps, this might take a while...
-loss = optimizer.optimize()
+loss = optimizer.optimize()#                                                                       #
 ```
 
 ```python
@@ -263,7 +269,7 @@ optimizer.w
 # Plot  the evolution of the loss
 import matplotlib.pyplot as plt
 plt.plot(np.arange(len(loss)),np.array(loss))
-
+plt.show()
 ```
 
 ```python
