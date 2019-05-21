@@ -174,7 +174,8 @@ print('No expected output this time! ;)')
 Retrieve the standard deviation for each all predictions $\mathbf{y}^*$ (`sigma_star`):
 
 ```python
-standard_deviations = sigma_star
+#standard_deviations = sigma_star
+standard_deviations = np.sqrt(np.diagonal(sigma_star))
 ```
 
 ```python
@@ -182,7 +183,8 @@ standard_deviations = sigma_star
 
 plt.figure(figsize=(12, 12))
 
-plt.errorbar(y_test, mu_star, 2*np.sqrt(np.diagonal(sigma_star)), fmt='none', alpha=0.5)
+# plt.errorbar(y_test, mu_star, 2*np.sqrt(np.diagonal(sigma_star)), fmt='none', alpha=0.5)
+plt.errorbar(y_test, mu_star, 2*standard_deviations, fmt='none', alpha=0.5)
 plt.scatter(y_test, mu_star, s=9, c='r', label='mu_star')
 plt.scatter(y_test, y_test, s=9, c='g', label='y_star')
 plt.legend()

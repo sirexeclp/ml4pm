@@ -199,7 +199,7 @@ Why do you think this is the case? (1 sentence)
 
 
 No.
-Because the validation error is lower than the training error.
+Because the validation error is lower than the training error (From -1.5).
 
 
 ## Task 2:  
@@ -324,13 +324,13 @@ What do the mu and s parameters control for the sigmoid and the Gaussian basis f
 
 Sigmoid: 
 
-- mu controls the point where the sigmoid function is at y=0.5 (does the slope change here?)
-- s controls the slope
+- mu controls the point where the sigmoid function is at y=0.5 or the position in the input space
+- s controls the spatial scale
 
 Gaussian basis function:
 
-- mu controls the maximum of the function
-- s controls the variance
+- mu controls the maximum of the function or the position in the input space
+- s controls the variance/ spatial scale
 
 <!-- #region -->
 Below we've implemented a function `transform_data(df, cols, M, S, func)` that allows you to compute transformations of your input variables using the basis functions which you implemented above, where:
@@ -573,6 +573,7 @@ How does the function behave, if x and x' are very similar or different?
 
 ```python
 # plot the RBF Kernel for x and x' with small and big difference
+# wrong, bc. wrong formula (euclidian distance, not squared absolute value)
 x_val = np.random.randint(low=-10, high=10, size=100)
 x_3_h = np.random.random(100)
 x_1 = [x - 0.1 for x in x_val]
@@ -592,7 +593,8 @@ plt.legend(loc='upper right')
 plt.show()
 ```
 
-With more similar values the result of the formula is closer to 1, the less similar the values are, the closer the result goes to 0.
+With more similar values the result of the formula is closer to 1, the less similar the values are, the closer the result goes to 0. <br>
+Correct: If $x$ and $x'$ are similar the function will get close to 1. If they differ it well be below 1.
 
 
 In order to predict $y$ for new observations, we have to calculate the pairwise kernel between the new observations and the original observations. The kernel vector $k(x^*)$ is defined as the vector of inner $k(x^*, x_N )$ products of $\mathbf Φ(x^*)$ with all training data points in matrix $\mathbf Φ$.
@@ -717,8 +719,7 @@ Look at the performance graphs and test errors above. What can you say about the
 
 
 
-The RBF kernel regression performs better, it has a lower test error with the optimal lambda than the regression with the linear kernel. <br>
-In addition the RBF kernel performs well enough, to overfit, this means, that the RBF kernel fits the training data well enough, that it can perfectly represented with it. Although we don't want the algorithm to overfit, it is an encouraging sign, that overfitting is possible. (I assume that this is correct, no idea though)
+The RBF kernel regression performs better, it has a lower test error with the optimal lambda than the regression with the linear kernel. In addition the RBF kernel performs well enough to overfit. This means that the RBF kernel fits the training data well enough, that it can be represented with it. Although we don't want the algorithm to overfit, it is an encouraging sign, that overfitting is possible.
 
 
 Success! we have finally managed to improve performance compared to the original linear model!
