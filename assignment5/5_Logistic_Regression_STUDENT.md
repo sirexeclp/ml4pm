@@ -102,8 +102,6 @@ Where $c_1$ are all the members of the first class (here: malignant, `y == 1.`) 
 Implement the log-loss (binary cross entropy function) using the formula above. 
 
 ```python
-from sklearn.metrics import log_loss
-
 def logloss(y, y_hat):
     """
     return the loss for predicted probabilities y_hat, and class labels y
@@ -124,11 +122,10 @@ def logloss(y, y_hat):
     # second = [np.log(1-logistic(a)) for b,a in zip(y, y_hat) if b == 0.0]
     
     # this is what leads to the correct output
-    #first = [np.log(a) for b,a in zip(y, y_hat) if b == 1.0]
-    #second = [np.log(1-a) for b,a in zip(y, y_hat) if b == 0.0]
+    first = [np.log(a) for b,a in zip(y, y_hat) if b == 1.0]
+    second = [np.log(1-a) for b,a in zip(y, y_hat) if b == 0.0]
             
-    #loss = -(np.sum(first)) - (np.sum(second))
-    loss = log_loss(y,y_hat)
+    loss = -(np.sum(first)) - (np.sum(second))
     return loss
     
 ```
