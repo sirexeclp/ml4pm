@@ -7,9 +7,9 @@ jupyter:
       format_version: '1.1'
       jupytext_version: 1.1.1
   kernelspec:
-    display_name: Python 3
+    display_name: Python (ml_in_prec_med)
     language: python
-    name: python3
+    name: ml_in_prec_med
 ---
 
 # Tutorial 5.1: Logistic regression and Gaussian Processes
@@ -29,6 +29,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 import util
+from IPython.display import clear_output
 ```
 
 For this exercise, we have outsourced some functions, which we frequently use in a second python script 'util.py'. 
@@ -45,6 +46,9 @@ X_train.head()
 
 ```python
 y_train[0:20] # 1 where malignant, 0 otherwise
+y_train_new = [1. if y=='M' else 0. for y in y_train]
+y_train_new
+y_test_new = [1. if y=='M' else 0. for y in y_test]
 ```
 
 <!-- #region -->
@@ -74,8 +78,8 @@ Implement the logistic sigmoid following the formula above. We have to make sure
 
 ```python
 def logistic(a):
-    logist = # your_code
-    logist = # your_code
+    logist = np.exp(a)/ (1 + np.exp(a))
+    logist = np.clip(logist, 1e-10, 1-1e-10)
     return logist
 ```
 
@@ -98,6 +102,8 @@ Where $c_1$ are all the members of the first class (here: malignant, `y == 1.`) 
 Implement the log-loss (binary cross entropy function) using the formula above. 
 
 ```python
+from sklearn.metrics import log_loss
+
 def logloss(y, y_hat):
     """
     return the loss for predicted probabilities y_hat, and class labels y
@@ -105,9 +111,24 @@ def logloss(y, y_hat):
     y -- scalar or numpy array
     y_hat -- scalar or numpy array
     """
-
-    loss = #your_code
+    # x_n*w = a
     
+    # y_hat[y==1]; gib mir alle werte von y_hat, wo y an der gleichen stelle 1 hat (so ähnlich wie join, where, 
+    # select bei datenbanken)
+    
+    #y_is_mal = [np.log(logistic(a)) if a for a in y]
+    #y, y_hat = np.asarray(y), np.asarray(y_hat)
+
+    # this is what is described in the formula
+    # first = [np.log(logistic(a)) for b,a in zip(y, y_hat) if b == 1.0]
+    # second = [np.log(1-logistic(a)) for b,a in zip(y, y_hat) if b == 0.0]
+    
+    # this is what leads to the correct output
+    #first = [np.log(a) for b,a in zip(y, y_hat) if b == 1.0]
+    #second = [np.log(1-a) for b,a in zip(y, y_hat) if b == 0.0]
+            
+    #loss = -(np.sum(first)) - (np.sum(second))
+    loss = log_loss(y,y_hat)
     return loss
     
 ```
@@ -134,8 +155,7 @@ def regularizer(w, lambd):
     '''
     return the value for the regularizer for a given w and lamd
     ''' 
-    reg = # your_code
-    return reg
+    return lambd * 0.5 * np.sum([a**2 for a in w])
 ```
 
 ### The derivative
@@ -213,17 +233,31 @@ class Steepest_descent_optimizer():
         
         self.w = np.zeros(X.shape[1]) # we initialize the weights with zeros
         
+        #self.w = np.full(X.shape[1], 0.1) # we initialize the weights with zeros
+        
         self.max_iter = 10000 # set the max number of iterations
+        #self.max_iter = 10
+        
+    def update_progress(self, progress):
+        bar_length = 50
+        block = int(round(bar_length * progress))
+        clear_output(wait = True)
+        text = "Progress: [{0}] {1:.1f}%".format( "#" * block + "-" * (bar_length - block), progress * 100)
+        print(text)
     
     def _gradient(self):
         # calculate the gradient of w 
-        # your_code
+        a = self.X.dot(self.w)
+        grad = self.X.transpose().dot(logistic(a) - self.y) + self.lambd * self.w
+        #identity = 
+        reg = self.lambd * self.w
+        #grad = self.X.transpose().dot(logistic(a) - identity) + reg
         return grad
     
     def _update(self):
         grad = self._gradient()
         # update the weights using the gradient and learning rate
-        self.w =  # your_code
+        self.w = self.w - self.alpha * grad
         
     def predict(self, X):
         return logistic(X.dot(self.w))
@@ -235,11 +269,11 @@ class Steepest_descent_optimizer():
         while it < self.max_iter:
             # update the weights (use the method you implemented above)
             # append the current loss (use self.predict, and the regularizer(), and logloss() functions)
-            
-            # your_code
-            
-            loss.append(# your_code
+            self._update()
+            y_hat = self.predict(self.X)
+            loss.append(logloss(self.y, y_hat) + regularizer(self.w, self.lambd))
             it += 1
+            #self.update_progress(it/self.max_iter)
         return loss
 ```
 
