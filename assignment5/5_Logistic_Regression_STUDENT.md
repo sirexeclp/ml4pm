@@ -35,9 +35,11 @@ from numpy.testing import assert_almost_equal
 For this exercise, we have outsourced some functions, which we frequently use in a second python script 'util.py'. 
 
 ```python
-#load the data with the load_data() function in util.py
+# load the data with the load_data() function in util.py
 X_train, y_train = util.load_data('data.csv')
 X_test, y_test = util.load_data('data.csv', testing_data=True)
+#y_train = [1 if y == "M" else 0 for y in y_train]
+#y_test = [1 if y == "M" else 0 for y in y_test]
 ```
 
 ```python
@@ -45,7 +47,7 @@ X_train.head()
 ```
 
 ```python
-y_train[0:20] # 1 where malignant, 0 otherwise
+y_train[0:20]  # 1 where malignant, 0 otherwise4
 ```
 
 <!-- #region -->
@@ -76,9 +78,8 @@ Implement the logistic sigmoid following the formula above. We have to make sure
 ```python
 def logistic(a):
     logist = np.exp(a)/(1+np.exp(a))
-    eta = 10**-6
-    logist = np.clip(logist
-                     , 0+eta, 1-eta)
+    eta = 10**-10
+    logist = np.clip(logist, 0+eta, 1-eta)
     return logist
 ```
 
@@ -109,16 +110,17 @@ def logloss(y, y_hat):
     y_hat -- scalar or numpy array
     """
 
-    loss = - np.sum(np.log(logistic(y_hat[y == 1]))) - np.sum(np.log(1-logistic(y_hat[y == 0])))
-    
+    loss = - np.sum(np.log((y_hat[y == 1]))) - \
+        np.sum(np.log(1-(y_hat[y == 0])))
+
     return loss
-    
 ```
 
 ```python
-loss = logloss(np.array([0.,1.,1.]), np.array([0.1, 0.5, 0.99]))
+loss = logloss(np.array([0., 1., 1.]), np.array([0.1, 0.5, 0.99]))
 print(f"logloss: {loss:.17f}")
-assert_almost_equal(loss, 0.80855803207127308, 17, "log loss does not match expected value!")
+assert_almost_equal(loss, 0.80855803207127308, 17,
+                    "log loss does not match expected value!")
 ```
 
 ** Expected output **:
@@ -138,9 +140,8 @@ Implement the regularizer
 def regularizer(w, lambd):
     '''
     return the value for the regularizer for a given w and lamd
-    ''' 
-    reg = lambd * 0.5 * np.sum(w**2)
-    return reg
+    '''
+    return lambd * 0.5 * np.sum(w**2)
 ```
 
 ### The derivative
@@ -207,58 +208,70 @@ Finally, the `optimize()` function will update the weights for `self.max_iter` t
 
 
 ```python
+from IPython.display import clear_output
+
+
 class Steepest_descent_optimizer():
-    
-    def __init__(self,X,y,lambd,alpha):
+
+    def __init__(self, X, y, lambd, alpha):
         self.alpha = alpha
         self.lambd = lambd
-        
+
         self.X = X
         self.y = y
-        
-        self.w = np.zeros(X.shape[1]) # we initialize the weights with zeros
-        
-        self.max_iter = 10_000 # set the max number of iterations
-    
+
+        self.w = np.zeros(X.shape[1])  # we initialize the weights with zeros
+
+        self.max_iter = 10_000  # set the max number of iterations
+
     def _gradient(self):
-        test = logistic(self.X.dot(self.w.T))
-        test2 = np.array(self.y == 1)# np.eye(self.y.shape[0])[self.y == 1]
-        #print(test.shape)
-        #print(test2.shape)
-        loss = self.X.T.dot(test - test2 )
-        reg = self.lambd * self.w.T
+        #print(np.array([self.y == 'M']))
+        # test2 = np.array([self.y == 'M']).T.dot(np.eye(self.y.shape[0]))#[self.y == 1]
+        # print(test2)
+        # print(test.shape)
+        # print(test2.shape)
+        loss = self.X.T.dot(logistic(self.X.dot(self.w)) - self.y)
+        reg = self.lambd * self.w
         grad = loss + reg
         return grad
-    
+
+    def _get_loss(self, y_hat):
+        return logloss(self.y, y_hat) + regularizer(self.w, self.lambd)
+
     def _update(self):
         grad = self._gradient()
         # update the weights using the gradient and learning rate
         self.w -= self.alpha*grad
-        
+
     def predict(self, X):
         return logistic(X.dot(self.w))
-        
+
     def optimize(self):
-        it = 0
         loss = []
         # we iterate until we reach self.max_iter
-        while it < self.max_iter:
+        for it in range(self.max_iter):
             self._update()
             y_hat = self.predict(self.X)
-            l = logloss(self.y,y_hat) + regularizer(self.w, self.lambd)
-            loss.append(l)
-            it += 1
-            if it % 100 == 0:
-                print("#", end='')
+            loss.append(self._get_loss(y_hat))
+            self.update_progress(it/self.max_iter)
         return loss
+
+    def update_progress(self, progress):
+        bar_length = 50
+        block = int(round(bar_length * progress))
+        clear_output(wait=True)
+        text = "Progress: [{0}] {1:.1f}%".format(
+            "#" * block + "-" * (bar_length - block), progress * 100)
+        print(text)
 ```
 
 ```python
 # Create an instance of the class
-optimizer = Steepest_descent_optimizer(X_train, y_train, lambd = 0.001, alpha = 0.001)
+optimizer = Steepest_descent_optimizer(
+    X_train, y_train, lambd=0.001, alpha=0.001)
 
 # run the optimization for 10000 steps, this might take a while...
-loss = optimizer.optimize()#                                                                       #
+loss = optimizer.optimize()
 ```
 
 ```python
@@ -268,7 +281,7 @@ optimizer.w
 ```python
 # Plot  the evolution of the loss
 import matplotlib.pyplot as plt
-plt.plot(np.arange(len(loss)),np.array(loss))
+plt.plot(np.arange(len(loss)), np.array(loss))
 plt.show()
 ```
 
@@ -290,13 +303,17 @@ importlib.reload(util)
 Let's see how accurate our predictions are using the average precision score and the roc area under the curve score.
 
 ```python
-average_precision_score(y_test, test_pred)
+score = average_precision_score(y_test, test_pred)
+assert_almost_equal(score,.993,3, "average precision score does not match!")
+print(f"average precision score: {score:.3f}")
 ```
 
 ** Expected output **:  ~ 0.993
 
 ```python
-roc_auc_score(y_test, test_pred)
+roc_score = roc_auc_score(y_test, test_pred)
+assert_almost_equal(roc_score,.995,3, "roc score does not match!")
+print(f"roc area under the curve score: {roc_score:.3f}")
 ```
 
 ** Expected output **: ~ 0.995
@@ -318,7 +335,3 @@ As this is also the first time for us preparing this tutorial, you are welcome t
 Thank you!  
 
 Jana & Remo
-
-```python
-
-```
