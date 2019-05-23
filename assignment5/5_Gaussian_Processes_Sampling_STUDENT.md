@@ -7,7 +7,7 @@ jupyter:
       format_version: '1.1'
       jupytext_version: 1.1.1
   kernelspec:
-    display_name: Python 3
+    display_name: Python [default]
     language: python
     name: python3
 ---
@@ -64,6 +64,7 @@ Implement a function that will construct the covariance matrix $\mathbf{K}$ ($\m
 def k_sqexp(x, A, L):
     
     # your_code (use either a nested loop or nested list comprehension to contstruct K)
+    kse = [A**1 * (-0.5*(()**2))]
     
     # we add a small offset to the diagnonal for numerical stability later
     K = K + np.eye(len(x))*1e-7
