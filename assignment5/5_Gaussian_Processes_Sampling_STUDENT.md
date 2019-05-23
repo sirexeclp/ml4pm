@@ -62,7 +62,11 @@ Implement a function that will construct the covariance matrix $\mathbf{K}$ ($\m
 ```python
 # Task 1: We construct a covariance matrix K that defines our Gaussian process
 def k_sqexp(x, A, L):
-    
+    K = np.zeros((len(x),len(x)))
+    for ii,i in enumerate(x):
+        for jj,j in enumerate(x):
+            K[ii,jj] = A**2 * np.exp((-0.5*(i-j)**2)/(L**2))
+        
     # your_code (use either a nested loop or nested list comprehension to contstruct K)
     
     # we add a small offset to the diagnonal for numerical stability later
@@ -116,7 +120,7 @@ We will visualize this for one example.
 Sample a set of `len(x)` independent variables from the distribution $\mathcal{N}(0,1)$ (tip: use `normal()`), store the values in `y_tilde`. Calculate the corresponding cholesky matrices for the kernel matrices `K1`, `K2`, `K3` with the `cholesky()` function (already imported above), which will give you chol1, chol2 and chol3 respectively. Rotate `y_tilde` with the different cholesky matrices, which will yield `y1`, `y2` and `y3` respectively:
 
 ```python
-y_tilde = # your_code (literally one function call)
+y_tilde = normal(0,1,len(x))
 ```
 
 ```python
@@ -126,10 +130,9 @@ plt.legend()
 
 ```python
 # calculate cholesky matrices for K1, K2, K3:
-chol1, chol2, chol3 = # your_code 
-
+chol1, chol2, chol3 = cholesky(K1),cholesky(K2),cholesky(K3)
 # "rotate" y_tilde with chol1, chol2 and col3: 
-y1, y2, y3 = # your_code
+y1, y2, y3 = y_tilde.dot(chol1), y_tilde.dot(chol2), y_tilde.dot(chol3)
 ```
 
 ```python
@@ -160,9 +163,9 @@ For this, write a function that takes a kernel matrix `K` and an integer `t`, an
 ```python
 # write a function that samples from our Gaussian process t-times, and returns a matrix S
 
-def sample_gauss(K,n):
-    
-    # your_code
+def sample_gauss(K,t):
+    M = K.shape[0]
+    S = np.ones((t,M))
     
     return S
 
@@ -202,3 +205,11 @@ As this is also the first time for us preparing this tutorial, you are welcome t
 Thank you!  
 
 Jana & Remo
+
+```python
+
+```
+
+```python
+
+```
