@@ -204,7 +204,7 @@ plt.ylim(-2, 2)
 ```
 
 ```python
-plt.scatter(Y[:,1], Y[:,70])
+plt.scatter(Y[:,1], Y[:,99])
 plt.xlim(-2, 2)
 plt.ylim(-2, 2)
 ```
