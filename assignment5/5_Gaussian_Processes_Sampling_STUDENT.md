@@ -160,10 +160,13 @@ For this, write a function that takes a kernel matrix `K` and an integer `t`, an
 ```python
 # write a function that samples from our Gaussian process t-times, and returns a matrix S
 
-def sample_gauss(K,n):
-    
-    # your_code
-    
+def sample_gauss(K,t):
+    M = K.shape[0]
+    S = np.ones((t,M))
+    L = np.linalg.cholesky(K + 1e-15*np.eye(M))
+    for i in range(M):
+        S[i] = y_tilde.dot(L)
+
     return S
 
 ```
@@ -185,8 +188,25 @@ Finally, we pick two points (columns of `Y`), and plot them against each other a
 
 Repeat the plot below for different pairs of points. What do we observe when we pick points that are close to each other (i.e. 10 and 12), vs when we pick points that are far away? 
 
+
+Values that are close together in input space produce output values thatalso are close together.
+
 ```python
-plt.scatter(Y[:,1], Y[:,10])
+plt.scatter(Y[:,10], Y[:,12])
+plt.xlim(-2, 2)
+plt.ylim(-2, 2)
+```
+
+```python
+plt.scatter(Y[:,1], Y[:,20])
+plt.xlim(-2, 2)
+plt.ylim(-2, 2)
+```
+
+```python
+plt.scatter(Y[:,1], Y[:,70])
+plt.xlim(-2, 2)
+plt.ylim(-2, 2)
 ```
 
 Congratulations, you made it through the sixth tutorial of this course!
