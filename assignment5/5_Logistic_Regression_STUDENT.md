@@ -109,15 +109,7 @@ def logloss(y, y_hat):
     y -- scalar or numpy array
     y_hat -- scalar or numpy array
     """
-    # x_n*w = a
-    
-    # y_hat[y==1]; gib mir alle werte von y_hat, wo y an der gleichen stelle 1 hat (so ähnlich wie join, where, 
-    # select bei datenbanken)
-    
-    #y_is_mal = [np.log(logistic(a)) if a for a in y]
-    #y, y_hat = np.asarray(y), np.asarray(y_hat)
-
-    # this is what is described in the formula
+    # this is what is described in the formula (at least the way I read it)
     # first = [np.log(logistic(a)) for b,a in zip(y, y_hat) if b == 1.0]
     # second = [np.log(1-logistic(a)) for b,a in zip(y, y_hat) if b == 0.0]
     
@@ -229,13 +221,11 @@ class Steepest_descent_optimizer():
         self.y = y
         
         self.w = np.zeros(X.shape[1]) # we initialize the weights with zeros
-        
-        #self.w = np.full(X.shape[1], 0.1) # we initialize the weights with zeros
-        
+                
         self.max_iter = 10000 # set the max number of iterations
-        #self.max_iter = 10
         
     def update_progress(self, progress):
+        # displays a progress bar
         bar_length = 50
         block = int(round(bar_length * progress))
         clear_output(wait = True)
@@ -245,15 +235,13 @@ class Steepest_descent_optimizer():
     def _gradient(self):
         # calculate the gradient of w 
         a = self.X.dot(self.w)
-        grad = self.X.transpose().dot(logistic(a) - self.y) + self.lambd * self.w
-        #identity = 
         reg = self.lambd * self.w
-        #grad = self.X.transpose().dot(logistic(a) - identity) + reg
+        grad = self.X.transpose().dot(logistic(a) - self.y) + reg
         return grad
     
     def _update(self):
-        grad = self._gradient()
         # update the weights using the gradient and learning rate
+        grad = self._gradient()
         self.w = self.w - self.alpha * grad
         
     def predict(self, X):
@@ -270,7 +258,7 @@ class Steepest_descent_optimizer():
             y_hat = self.predict(self.X)
             loss.append(logloss(self.y, y_hat) + regularizer(self.w, self.lambd))
             it += 1
-            #self.update_progress(it/self.max_iter)
+            self.update_progress(it/self.max_iter)
         return loss
 ```
 
