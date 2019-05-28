@@ -1,15 +1,12 @@
 ---
 jupyter:
   jupytext:
+    notebook_metadata_filter: -kernelspec
     text_representation:
       extension: .md
       format_name: markdown
       format_version: '1.1'
       jupytext_version: 1.1.1
-  kernelspec:
-    display_name: Python (ml_in_prec_med)
-    language: python
-    name: ml_in_prec_med
 ---
 
 # Tutorial 5.1: Logistic regression and Gaussian Processes
