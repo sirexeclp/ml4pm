@@ -47,9 +47,9 @@ From this plot we can see that the data is not linearly separable. So let's use 
 ```python
 NN_ARCHITECTURE = [
     {"input_dim": 2, "output_dim": 25, "activation": "relu"},
-    {"input_dim": 25, "output_dim": 50, "activation": "relu"},
-    {"input_dim": 50, "output_dim": 50, "activation": "relu"},
-    {"input_dim": 50, "output_dim": 25, "activation": "relu"},
+    {"input_dim": 25, "output_dim": 25, "activation": "relu"},
+   #{"input_dim": 50, "output_dim": 50, "activation": "relu"},
+    #{"input_dim": 50, "output_dim": 25, "activation": "relu"},
     {"input_dim": 25, "output_dim": 1, "activation": "sigmoid"},
 ]
 ```
@@ -303,7 +303,7 @@ def single_layer_backward_propagation(dA_curr, W_curr, b_curr, Z_curr, A_prev, a
     dZ_curr = globals()[f"{activation}_backward"](dA_curr, Z_curr)
     
     # derivative of the matrix W
-    dW_curr = dZ_curr.dot(dA_curr.T)/m
+    dW_curr = dZ_curr.dot(A_prev.T)/m
     # derivative of the vector b
     db_curr = np.mean(dZ_curr, axis=1,keepdims=True)
     # derivative of the matrix A_prev
@@ -397,10 +397,6 @@ def update(params_values, grads_values, nn_architecture, learning_rate):
 
     # iteration over network layers
     for layer_idx, layer in enumerate(nn_architecture, 1):
-        print(layer)
-        #print(grads_values)
-        print("dW" + str(layer_idx))
-        print(grads_values["dW" + str(layer_idx)].shape)
         params_values["W" + str(layer_idx)] = params_values["W" + str(layer_idx)] - (learning_rate * grads_values["dW" + str(layer_idx)]  )      
         params_values["b" + str(layer_idx)] -= learning_rate * grads_values["db" + str(layer_idx)]
 
@@ -412,7 +408,7 @@ Now we have everything we need to train our model. The final task of this exerci
 
 ```python
 # STUDENT
-
+from IPython.display import clear_output
 def train(X, Y, nn_architecture, epochs, learning_rate, verbose=False):
     # initiation of neural net parameters
     
@@ -422,18 +418,26 @@ def train(X, Y, nn_architecture, epochs, learning_rate, verbose=False):
     # of metrics calculated during the learning process 
     cost_history = []
     accuracy_history = []
+    acc_test_history = []
+    cost_test_history = []
     
     # performing calculations for subsequent iterations
     for i in range(epochs):
         # step forward
         Y_hat, cache = full_forward_propagation(X,params_values,nn_architecture)
-        
+        Y_test_hat, _ = full_forward_propagation(np.transpose(X_test), params_values, NN_ARCHITECTURE)
         # calculating metrics and saving them in history
         cost = get_cost_value(Y_hat, Y)
         cost_history.append(cost)
-        accuracy = get_accuracy_value(Y_hat, Y)
-        accuracy_history.append(accuracy)
         
+        cost_test = get_cost_value(Y_test_hat, np.transpose(y_test.reshape((y_test.shape[0], 1))))
+        cost_test_history.append(cost_test)
+        
+        accuracy = get_accuracy_value(Y_hat, Y)
+
+        acc_test = get_accuracy_value(Y_test_hat, np.transpose(y_test.reshape((y_test.shape[0], 1))))
+        accuracy_history.append(accuracy)
+        acc_test_history.append(acc_test)
         # step backward - calculating gradient
         grads_values = full_backward_propagation(Y_hat,Y,cache,params_values,nn_architecture)
         
@@ -442,14 +446,17 @@ def train(X, Y, nn_architecture, epochs, learning_rate, verbose=False):
         
         if(i % 50 == 0):
             if(verbose):
-                print("Iteration: {:05} - cost: {:.5f} - accuracy: {:.5f}".format(i, cost, accuracy))
+                clear_output(wait=True)
+                print("Iteration: {:05} - cost: {:.5f} - accuracy: {:.5f} - cost-test: {:.5f} - accuracy-test: {:.5f}".format(
+                    i, cost, accuracy, cost_test, acc_test))
+                
             
-    return params_values
+    return params_values, cost_history, accuracy_history, acc_test_history, cost_test_history
 ```
 
 ```python
 # Training
-params_values, cost_history, accuracy_history = train(np.transpose(X_train), np.transpose(y_train.reshape((y_train.shape[0], 1))), NN_ARCHITECTURE, 10000, 0.01, verbose=True)
+params_values, cost_history, accuracy_history, acc_test_history, cost_test_history = train(np.transpose(X_train), np.transpose(y_train.reshape((y_train.shape[0], 1))), NN_ARCHITECTURE, 10000, 0.01, verbose=True)
 ```
 
 ```python
@@ -467,10 +474,20 @@ And last but not least, let's plot how the accuracy and cost evolved over the tr
 
 ```python
 plt.plot(np.arange(10000), np.array(cost_history))
+plt.plot(np.array(cost_test_history))
+plt.title("loss vs. epochs")
+plt.xlabel("epoch")
+plt.ylabel("loss")
+plt.legend(["train","test"])
 ```
 
 ```python
 plt.plot(np.arange(10000), np.array(accuracy_history))
+plt.plot(np.array(acc_test_history))
+plt.title("accuracy vs. epochs")
+plt.xlabel("epoch")
+plt.ylabel("accuracy")
+plt.legend(["train","test"])
 ```
 
 ### Question 1:
@@ -480,8 +497,11 @@ What can you say about the learning progress of the model?
 ### Question 2:
 Can you find out how many trainable parameters our model contains? Do you think that this number of parameters is appropriate for our classification task?
 
-```python
 
+You can achieve similar results with just 201 parameters.
+
+```python
+np.sum([x.size for x in params_values.values()])
 ```
 
 Congratulations, you made it through the sixth tutorial of this course!
