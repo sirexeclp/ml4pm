@@ -47,7 +47,7 @@ From this plot we can see that the data is not linearly separable. So let's use 
 ```python
 NN_ARCHITECTURE = [
     {"input_dim": 2, "output_dim": 25, "activation": "relu"},
-    {"input_dim": 25, "output_dim": 25, "activation": "relu"},
+   # {"input_dim": 25, "output_dim": 50, "activation": "relu"},
    #{"input_dim": 50, "output_dim": 50, "activation": "relu"},
     #{"input_dim": 50, "output_dim": 25, "activation": "relu"},
     {"input_dim": 25, "output_dim": 1, "activation": "sigmoid"},
@@ -397,7 +397,7 @@ def update(params_values, grads_values, nn_architecture, learning_rate):
 
     # iteration over network layers
     for layer_idx, layer in enumerate(nn_architecture, 1):
-        params_values["W" + str(layer_idx)] = params_values["W" + str(layer_idx)] - (learning_rate * grads_values["dW" + str(layer_idx)]  )      
+        params_values["W" + str(layer_idx)] -= learning_rate * grads_values["dW" + str(layer_idx)]   
         params_values["b" + str(layer_idx)] -= learning_rate * grads_values["db" + str(layer_idx)]
 
     return params_values;
@@ -473,6 +473,7 @@ print("Test set accuracy: {:.2f}".format(acc_test))
 And last but not least, let's plot how the accuracy and cost evolved over the training epochs...
 
 ```python
+plt.style.use('fivethirtyeight')
 plt.plot(np.arange(10000), np.array(cost_history))
 plt.plot(np.array(cost_test_history))
 plt.title("loss vs. epochs")
@@ -494,11 +495,15 @@ plt.legend(["train","test"])
 What can you say about the learning progress of the model?
 
 
+Both training and test accuracy are monotonouly increasing while cost or loss is monotonouly decreasing. (more or less)
+We could also reduce the number of epochs, esp. with the reduced model, since accuracy is plateauing at about 6000 or 8000 epochs.
+
+
 ### Question 2:
 Can you find out how many trainable parameters our model contains? Do you think that this number of parameters is appropriate for our classification task?
 
 
-You can achieve similar results with just 201 parameters.
+You can achieve similar results with just 201 or even 101 parameters. Just commenting out every hidden layer, still yields acceptable results. Using over 5000 parameters to find to classify two rings of data seems like a lot
 
 ```python
 np.sum([x.size for x in params_values.values()])
