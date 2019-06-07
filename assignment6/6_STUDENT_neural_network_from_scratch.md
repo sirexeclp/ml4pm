@@ -40,7 +40,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_
 sns.set_style("whitegrid")
 plt.figure(figsize=(8,8))
 plt.scatter(X_train[:, 0], X_train[:, 1], c=y_train.ravel(), s=50, cmap=plt.cm.Spectral, edgecolors='black');
-
 ```
 
 From this plot we can see that the data is not linearly separable. So let's use a neural network model to classify the blue from the red data points. Here we will use a neural network, with 4 hidden layers with 25, 50, 50 and 25 units respectively and an output layer of 2 units for our binary classification (red or blue).
@@ -48,9 +47,9 @@ From this plot we can see that the data is not linearly separable. So let's use 
 ```python
 NN_ARCHITECTURE = [
     {"input_dim": 2, "output_dim": 25, "activation": "relu"},
-    {"input_dim": 25, "output_dim": 50, "activation": "relu"},
-    {"input_dim": 50, "output_dim": 50, "activation": "relu"},
-    {"input_dim": 50, "output_dim": 25, "activation": "relu"},
+   # {"input_dim": 25, "output_dim": 50, "activation": "relu"},
+   #{"input_dim": 50, "output_dim": 50, "activation": "relu"},
+    #{"input_dim": 50, "output_dim": 25, "activation": "relu"},
     {"input_dim": 25, "output_dim": 1, "activation": "sigmoid"},
 ]
 ```
@@ -131,11 +130,11 @@ Implement the sigmoid and relu functions, which take the linear transformation Z
 ```python
 # STUDENT
 def sigmoid(Z):
-    sig = #your_code
+    sig = 1/(1+np.exp(-Z))
     return sig
 
 def relu(Z):
-    relu = #your_code
+    relu = np.where(Z>0,Z,0)
     return relu
 ```
 
@@ -149,19 +148,11 @@ Implement the linear transformation input $\mathbf{Z}$ of the next layer with th
 
 def single_layer_forward_propagation(A_prev, W_curr, b_curr, activation="relu"):
     # calculation of the input value for the activation function
-    
-    Z_curr = #your_code
-    
-    # selection of activation function
-    if activation is "relu":
-        activation_func = relu
-    elif activation is "sigmoid":
-        activation_func = sigmoid
-    else:
-        raise Exception('Non-supported activation function')
-        
+    #input times weight, add a bias
+    Z_curr = W_curr.dot(A_prev)+b_curr
+    #activate
     # return of calculated activation A and the intermediate Z matrix
-    return activation_func(Z_curr), Z_curr
+    return globals()[activation](Z_curr), Z_curr
 ```
 
 We will now implement the forward propagation through the entire network and call the function above for each layer. 
@@ -194,7 +185,7 @@ def full_forward_propagation(X, params_values, nn_architecture):
         b_curr = params_values["b" + str(layer_idx)]
         # calculation of activation for the current layer
         
-        A_curr, Z_curr = #your_code
+        A_curr, Z_curr = single_layer_forward_propagation(A_prev,W_curr,b_curr,activ_function_curr)
         
         # saving calculated values in the memory
         memory["A" + str(idx)] = A_prev
@@ -222,7 +213,7 @@ def get_cost_value(Y_hat, Y):
     # number of examples
     m = Y_hat.shape[1]
     # calculation of the cost according to the formula
-    cost = #your_code
+    cost = -np.mean(Y*np.log(Y_hat) + (1-Y)*np.log(1-Y_hat))
     return np.squeeze(cost)
 ```
 
@@ -276,14 +267,13 @@ $$ \sigma^{'}(z) = \sigma (z)\cdot (1-\sigma(z)) $$
 # STUDENT
 
 def relu_backward(dA, Z):
-    dZ = #your_code
-    
-    return dZ;
+    dZ = dA*np.where(Z>0,1,0)
+    return dZ
 
 def sigmoid_backward(dA, Z):
     # tip: make use of the "sigmoid"-function we implemented above 
-    sig = #your_code
-    dZ = #your_code
+    sig = sigmoid(Z)*(1-sigmoid(Z))
+    dZ = dA * sig
     return dZ
 ```
 
@@ -309,23 +299,15 @@ def single_layer_backward_propagation(dA_curr, W_curr, b_curr, Z_curr, A_prev, a
     # number of examples
     m = A_prev.shape[1]
     
-    # selection of activation function
-    if activation is "relu":
-        backward_activation_func = relu_backward
-    elif activation is "sigmoid":
-        backward_activation_func = sigmoid_backward
-    else:
-        raise Exception('Non-supported activation function')
-    
     # calculation of the activation function derivative
-    dZ_curr = backward_activation_func(dA_curr, Z_curr)
+    dZ_curr = globals()[f"{activation}_backward"](dA_curr, Z_curr)
     
     # derivative of the matrix W
-    dW_curr = #your_code
+    dW_curr = dZ_curr.dot(A_prev.T)/m
     # derivative of the vector b
-    db_curr = #your_code
+    db_curr = np.mean(dZ_curr, axis=1,keepdims=True)
     # derivative of the matrix A_prev
-    dA_prev = #your_code
+    dA_prev = W_curr.T.dot(dZ_curr)
 
     return dA_prev, dW_curr, db_curr
 ```
@@ -385,7 +367,8 @@ def full_backward_propagation(Y_hat, Y, memory, params_values, nn_architecture):
         W_curr = params_values["W" + str(layer_idx_curr)]
         b_curr = params_values["b" + str(layer_idx_curr)]
         
-        dA_prev, dW_curr, db_curr = #your_code
+        dA_prev, dW_curr, db_curr = single_layer_backward_propagation(dA_curr,W_curr\
+                                                                      ,b_curr,Z_curr,A_prev,activ_function_curr)
         
         grads_values["dW" + str(layer_idx_curr)] = dW_curr
         grads_values["db" + str(layer_idx_curr)] = db_curr
@@ -414,8 +397,8 @@ def update(params_values, grads_values, nn_architecture, learning_rate):
 
     # iteration over network layers
     for layer_idx, layer in enumerate(nn_architecture, 1):
-        params_values["W" + str(layer_idx)] = #your_code        
-        params_values["b" + str(layer_idx)] = #your_code 
+        params_values["W" + str(layer_idx)] -= learning_rate * grads_values["dW" + str(layer_idx)]   
+        params_values["b" + str(layer_idx)] -= learning_rate * grads_values["db" + str(layer_idx)]
 
     return params_values;
 ```
@@ -425,44 +408,55 @@ Now we have everything we need to train our model. The final task of this exerci
 
 ```python
 # STUDENT
-
+from IPython.display import clear_output
 def train(X, Y, nn_architecture, epochs, learning_rate, verbose=False):
     # initiation of neural net parameters
     
-    params_values = #your_code
+    params_values = init_layers(nn_architecture)
     
     # initiation of lists storing the history 
     # of metrics calculated during the learning process 
     cost_history = []
     accuracy_history = []
+    acc_test_history = []
+    cost_test_history = []
     
     # performing calculations for subsequent iterations
     for i in range(epochs):
         # step forward
-        Y_hat, cache = #your_code
-        
+        Y_hat, cache = full_forward_propagation(X,params_values,nn_architecture)
+        Y_test_hat, _ = full_forward_propagation(np.transpose(X_test), params_values, NN_ARCHITECTURE)
         # calculating metrics and saving them in history
         cost = get_cost_value(Y_hat, Y)
         cost_history.append(cost)
-        accuracy = get_accuracy_value(Y_hat, Y)
-        accuracy_history.append(accuracy)
         
+        cost_test = get_cost_value(Y_test_hat, np.transpose(y_test.reshape((y_test.shape[0], 1))))
+        cost_test_history.append(cost_test)
+        
+        accuracy = get_accuracy_value(Y_hat, Y)
+
+        acc_test = get_accuracy_value(Y_test_hat, np.transpose(y_test.reshape((y_test.shape[0], 1))))
+        accuracy_history.append(accuracy)
+        acc_test_history.append(acc_test)
         # step backward - calculating gradient
-        grads_values = #your_code
+        grads_values = full_backward_propagation(Y_hat,Y,cache,params_values,nn_architecture)
         
         # updating model state
-        params_values = #your_code
+        params_values = update(params_values, grads_values,nn_architecture,learning_rate)
         
         if(i % 50 == 0):
             if(verbose):
-                print("Iteration: {:05} - cost: {:.5f} - accuracy: {:.5f}".format(i, cost, accuracy))
+                clear_output(wait=True)
+                print("Iteration: {:05} - cost: {:.5f} - accuracy: {:.5f} - cost-test: {:.5f} - accuracy-test: {:.5f}".format(
+                    i, cost, accuracy, cost_test, acc_test))
+                
             
-    return params_values
+    return params_values, cost_history, accuracy_history, acc_test_history, cost_test_history
 ```
 
 ```python
 # Training
-params_values, cost_history, accuracy_history = train(np.transpose(X_train), np.transpose(y_train.reshape((y_train.shape[0], 1))), NN_ARCHITECTURE, 10000, 0.01, verbose=True)
+params_values, cost_history, accuracy_history, acc_test_history, cost_test_history = train(np.transpose(X_train), np.transpose(y_train.reshape((y_train.shape[0], 1))), NN_ARCHITECTURE, 10000, 0.01, verbose=True)
 ```
 
 ```python
@@ -479,22 +473,40 @@ print("Test set accuracy: {:.2f}".format(acc_test))
 And last but not least, let's plot how the accuracy and cost evolved over the training epochs...
 
 ```python
+plt.style.use('fivethirtyeight')
 plt.plot(np.arange(10000), np.array(cost_history))
+plt.plot(np.array(cost_test_history))
+plt.title("loss vs. epochs")
+plt.xlabel("epoch")
+plt.ylabel("loss")
+plt.legend(["train","test"])
 ```
 
 ```python
 plt.plot(np.arange(10000), np.array(accuracy_history))
+plt.plot(np.array(acc_test_history))
+plt.title("accuracy vs. epochs")
+plt.xlabel("epoch")
+plt.ylabel("accuracy")
+plt.legend(["train","test"])
 ```
 
 ### Question 1:
 What can you say about the learning progress of the model?
 
 
+Both training and test accuracy are monotonouly increasing while cost or loss is monotonouly decreasing. (more or less)
+We could also reduce the number of epochs, esp. with the reduced model, since accuracy is plateauing at about 6000 or 8000 epochs.
+
+
 ### Question 2:
 Can you find out how many trainable parameters our model contains? Do you think that this number of parameters is appropriate for our classification task?
 
-```python
 
+You can achieve similar results with just 201 or even 101 parameters. Just commenting out every hidden layer, still yields acceptable results. Using over 5000 parameters to find to classify two rings of data seems like a lot
+
+```python
+np.sum([x.size for x in params_values.values()])
 ```
 
 Congratulations, you made it through the sixth tutorial of this course!
