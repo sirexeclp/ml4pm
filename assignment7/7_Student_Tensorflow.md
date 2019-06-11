@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.1'
-      jupytext_version: 1.1.1
+      jupytext_version: 1.1.6
   kernelspec:
     display_name: Python 3
     language: python
@@ -44,7 +44,14 @@ from utils import random_mini_batches
 
 import tensorflow as tf
 from tensorflow.python.framework import ops
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
 tf.VERSION
+```
+
+```python
+from tensorflow.python.client import device_lib
+device_lib.list_local_devices()
 ```
 
 ## Data preprocessing
@@ -143,6 +150,7 @@ x = tf.placeholder(tf.float32, name='x')
 c = tf.multiply(a,x)
 d = tf.multiply(b,c)
 
+assert str(d) == 'Tensor("Mul_1:0", dtype=float32)', "output does not match"
 print(d)
 ```
 
@@ -160,7 +168,9 @@ In order to run the computations in our graph, we have to create a `tf.Session` 
 # we start a tf.Session (step 4)
 with tf.Session() as sess:
     # we run the session to produce 'd' (step 5)
-    print(sess.run(d, feed_dict={x: 1.}))
+    output = sess.run(d, feed_dict={x: 1.})
+    assert int(output) == 10, "output does not match"
+    print(output)
 ```
 
 **Expected output:**
@@ -172,7 +182,9 @@ This gives the desired result for `x = 1.`. Note that we used `feed_dict` in ord
 ```python
 with tf.Session() as sess:
     # we feed x = 2. instead of x = 1.
-    print(sess.run(d, feed_dict={x: 2.}))
+    output = sess.run(d, feed_dict={x: 2.})
+    assert int(output) == 20, "output does not match"
+    print(output)
 ```
 
 **Expected output:**
@@ -193,6 +205,7 @@ with tf.Session() as sess:
     try:
         sess.run(d, feed_dict={x: 2.})
     except RuntimeError as e:
+        assert str(e) == "The Session graph is empty.  Add operations to the graph before calling run()." , "wrong error"
         print(e)
 ```
 
@@ -262,7 +275,10 @@ For instance, if we want to use gradient descent the optimizer would be:
 
 ```python
 # define the optimizer:
+plt.style.use('fivethirtyeight')
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(loss)
+
+loss_hist = []
 
 with tf.Session() as sess:
     
@@ -274,12 +290,15 @@ with tf.Session() as sess:
         
         # we simply pass the same obsevation (x = 1. and y = 1.) 10 times 
         _, c = sess.run([optimizer, loss], feed_dict={x: 1., y: 1.})
-        
+        loss_hist +=[c]
         weight = sess.run(w)
         bias = sess.run(b)
         
         print('iteration {:0>2} -> loss: {}, w: {}, b: {}'.format(i+1, c, weight, bias))
-    
+
+plt.title("loss vs. epochs")
+plt.plot(loss_hist)
+plt.show()
 ```
 
 We can see the loss going down and the variables `w` and `b` changing after each iteration. Of course it doesn't make much sense to optimize the parameters for a single observation (`x = 1. , y = 1.`) - this is just an illustrative example. But we now already have everything we need in order to start building and optimizing models with Tensorflow.
@@ -318,8 +337,8 @@ def create_placeholders(n_x, n_y):
       In fact, the number of examples during test/train is different.
     """
         
-    X = #your_code
-    Y = #your_code
+    X = tf.placeholder(tf.float32, shape=[n_x, None] ,name='X')
+    Y = tf.placeholder(tf.float32, shape=[n_y, None] ,name='Y')
     
     return X, Y
 ```
@@ -378,8 +397,8 @@ def initialize_parameters(architecture):
     
     for i, param in enumerate(architecture):
         
-        input_dim = #your_code
-        output_dim = #your_code
+        input_dim = param["input_dim"]
+        output_dim = param["output_dim"]
         
         W = tf.get_variable("W{}".format(i+1), [output_dim, input_dim], initializer=tf.initializers.he_normal(i))
         b = tf.get_variable("b{}".format(i+1), [output_dim, 1], initializer=tf.zeros_initializer())
@@ -458,7 +477,7 @@ def forward_propagation(X, architecture, parameters):
     for i, layer_parameters in enumerate(parameters):
         
         # linear transformation
-        Z = #your_code
+        Z = tf.add(tf.matmul(layer_parameters["weights"],A),layer_parameters["bias"])
         
         if i == len(parameters) - 1:
             # return Z if we are in the last layer
@@ -466,7 +485,7 @@ def forward_propagation(X, architecture, parameters):
         else:
             # otherwise apply the activation function
             if architecture[i]['activation'] == 'relu':
-                A = #your_code
+                A = tf.nn.relu(Z)
             else:
                 raise NotImplementedError('activation '+architecture[i]['activation']+' not implemented!')
                 
@@ -520,17 +539,18 @@ def compute_loss(Y, Z, activation='sigmoid'):
      
     """
     # to fit the tensorflow requirement for tf.nn.softmax_cross_entropy_with_logits(...,...)
-    logits = tf.transpose(Z)
-    labels = tf.transpose(Y)
-    
+    inputs ={
+    "logits": tf.transpose(Z)
+    ,"labels": tf.transpose(Y)
+    }
     if activation == 'sigmoid':
-        loss = #your_code
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(**inputs)
     elif activation == 'softmax':
-        loss = #your_code
+        loss = tf.nn.softmax_cross_entropy_with_logits(**inputs)
     else:
         raise ValueError('activation has to be either sigmoid or softmax!')
         
-    return loss
+    return tf.reduce_mean(loss)
 
 ```
 
@@ -539,9 +559,35 @@ def compute_loss(Y, Z, activation='sigmoid'):
 We will now bring everything together in the `model` function. Complete the function by using the functions you implemented above:
 
 ```python
+def calculate_accuracy(Z_n, Y, architecture):
+    # Calculate the correct predictions
+    if architecture[-1]["activation"] == "sigmoid":
+        correct_prediction = tf.equal(tf.cast(tf.greater_equal(Z_n, tf.constant(0.5)), "float"), Y)
+    elif architecture[-1]["activation"] == "softmax":
+        correct_prediction = tf.equal(tf.argmax(Z_n), tf.argmax(Y))
+        
+    # Calculate accuracy on the test set. Hint: use tensorflows reduce-mean() and cast function
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction,"float"))
+    return accuracy    
+```
+
+```python
+def update_progress(progress):
+    # displays a progress bar
+    bar_length = 50
+    block = int(round(bar_length * progress))
+    clear_output(wait = True)
+    text = "Progress: [{0}] {1:.1f}%".format( "#" * block + "-" * (bar_length - block), progress * 100)
+    print(text)
+```
+
+```python
+from IPython.display import clear_output
+import time
 def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001,
           num_epochs=1000, minibatch_size = 32, print_loss = True):
-    
+   
+    text = ""
     ops.reset_default_graph()  # to be able to rerun the model without overwriting tf variables
     
     tf.set_random_seed(1)      # to keep consistent results
@@ -557,13 +603,13 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
     X, Y = create_placeholders(n_x, n_y)
     
     # Initialize objects for the parameters (weights and biases) with our function from above
-    parameters = #your_code
+    parameters = initialize_parameters(architecture)
     
     # Forward propagation: Build the forward propagation in the tensorflow graph with our function from above
-    Z_n = #your_code
+    Z_n = forward_propagation(X, architecture, parameters)
     
     # Loss function: Add loss function to tensorflow graph
-    loss = #your_code
+    loss = compute_loss(Y, Z_n)
     
     # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
@@ -575,15 +621,16 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
         
         # Run the initialization
         sess.run(init)
-        
+         
         # Do the training loop
+        start = time.time()
         for epoch in range(num_epochs):
             
             epoch_loss = 0.                            # Defines a loss related to an epoch
+            epoc_acc = 0.
             num_minibatches = int(m / minibatch_size)  # number of minibatches per epoch
             
             seed = seed + 1
-            
             minibatches = random_mini_batches(X_train, Y_train, minibatch_size, seed)
             
             for minibatch in minibatches:
@@ -594,17 +641,27 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
                 # IMPORTANT: The line that runs the graph on a minibatch.
                 # Run the session to execute the "optimizer" and the "cost", the feed_dict should contain a minibatch for (X, Y).
                 
-                _ , minibatch_loss = sess.run([optimizer, loss], feed_dict={X: minibatch_X, Y: minibatch_Y})
+                _ , minibatch_loss, y_hat = sess.run([optimizer, loss, Z_n], feed_dict={X: minibatch_X, Y: minibatch_Y})
                 
+                #epoc_acc, _ = tf.metrics.accuracy(minibatch_Y, y_hat)
+                
+                 
+                #tf.cast(tf.reduce_mean(epoc_acc),"float")
                 epoch_loss += minibatch_loss / num_minibatches
             
+            #epoc_acc = calculate_accuracy(Z_n, Y_train, architecture).eval({X: X_train, Y: Y_train})
             # Print the cost every epoch
-            if print_loss == True and epoch % 100 == 0:
-                print ("Loss after epoch %i: %f" % (epoch, epoch_loss))
-            if print_loss == True and epoch % 5 == 0:
+            if print_loss == True and epoch % 10 == 0:
+               
+                text = f"epoch {epoch}  loss: {epoch_loss} acc: {epoc_acc}"
+            if print_loss == True:# and epoch % 5 == 0:
+                
                 loss_history.append(epoch_loss)
-    
-    
+            
+            update_progress(epoch/num_epochs)
+            print(text)
+        
+        end = time.time()
         # plot the cost
         plt.plot(np.squeeze(loss_history))
         plt.ylabel('loss')
@@ -614,16 +671,9 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
 
         # lets save the parameters in a variable
         parameters = sess.run(parameters)
-        print ("Parameters have been trained!")
+        print (f"Parameters have been trained in {end - start:.3f}s!")
 
-        # Calculate the correct predictions
-        if architecture[-1]["activation"] == "sigmoid":
-            correct_prediction = tf.equal(tf.cast(tf.greater_equal(Z_n, tf.constant(0.5)), "float"), Y)
-        elif architecture[-1]["activation"] == "softmax":
-            correct_prediction = tf.equal(tf.argmax(Z_n), tf.argmax(Y))
-            
-        # Calculate accuracy on the test set. Hint: use tensorflows reduce-mean() and cast function
-        accuracy = #your_code
+        accuracy = calculate_accuracy(Z_n, Y, architecture)
 
         print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
         print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
@@ -632,7 +682,8 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
 ```
 
 ```python
-model(X_train, y_train, X_test, y_test, NN_ARCHITECTURE)
+
+params = model(X_train, y_train, X_test, y_test, NN_ARCHITECTURE,num_epochs=1000)
 ```
 
 **Question:**  
