@@ -8,10 +8,11 @@ NOTEBOOK_FILES = $(addsuffix .ipynb, $(basename $(MARKDOWN_FILES)))
 	$(info Building notebooks: [${NOTEBOOK_FILES}])
 	$(info This notebook will be renamed to: $(subst STUDENT, HierKönnteIhrGruppennameStehen, $@))
 	jupytext --to notebook $<
-	jupyter nbconvert --to notebook --execute --inplace $@
+	jupyter nbconvert --ExecutePreprocessor.timeout=-1 --to notebook --execute --inplace $@
 	mv $@ $(subst STUDENT,HierKönnteIhrGruppennameStehen, $@)
 
 notebooks: $(NOTEBOOK_FILES)
+#	touch $@
 
 clean:
 	#remove notebooks and checkpoints
