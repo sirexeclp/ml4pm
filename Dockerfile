@@ -8,5 +8,6 @@ RUN pip3 install pillow --upgrade
 
 RUN pip3 install sklearn --upgrade
 
+RUN pip3 install xarray --upgrade
 
 #CMD ["bash", "-c", "source /etc/bash.bashrc && jupyter notebook --notebook-dir=/tf --ip 0.0.0.0 --no-browser --allow-root"]
