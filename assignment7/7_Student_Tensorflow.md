@@ -348,9 +348,8 @@ As we did in our last exercise, we define the architecture using a list of dicti
 ```python
 NN_ARCHITECTURE = [
     {"input_dim": 2352, "output_dim": 25, "activation": "relu"},
-    {"input_dim": 25, "output_dim": 25, "activation": "relu"},
-    {"input_dim": 25, "output_dim": 25, "activation": "relu"},
-    {"input_dim": 25, "output_dim": 3, "activation": "softmax"},
+ #   {"input_dim": 25, "output_dim": 25, "activation": "relu"},
+    {"input_dim": 25, "output_dim": 3, "activation": "sigmoid"},
 ] 
 ```
 
@@ -572,6 +571,7 @@ def calculate_accuracy(Z_n, Y, architecture):
 ```
 
 ```python
+from IPython.display import clear_output
 def update_progress(progress):
     # displays a progress bar
     bar_length = 50
@@ -582,7 +582,6 @@ def update_progress(progress):
 ```
 
 ```python
-from IPython.display import clear_output
 import time
 def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001,
           num_epochs=1000, minibatch_size = 32, print_loss = True):
@@ -609,7 +608,7 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
     Z_n = forward_propagation(X, architecture, parameters)
     
     # Loss function: Add loss function to tensorflow graph
-    loss = compute_loss(Y, Z_n)
+    loss = compute_loss(Y, Z_n, architecture[-1]["activation"])
     
     # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
@@ -653,7 +652,7 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
             # Print the cost every epoch
             if print_loss == True and epoch % 10 == 0:
                
-                text = f"epoch {epoch}  loss: {epoch_loss} acc: {epoc_acc}"
+                text = "epoch %d  loss: %f acc: %f" % (epoch,epoch_loss,epoc_acc )
             if print_loss == True:# and epoch % 5 == 0:
                 
                 loss_history.append(epoch_loss)
@@ -671,27 +670,59 @@ def model(X_train, Y_train, X_test, Y_test, architecture, learning_rate = 0.0001
 
         # lets save the parameters in a variable
         parameters = sess.run(parameters)
-        print (f"Parameters have been trained in {end - start:.3f}s!")
+        print ("Parameters have been trained in %f s!"%(end - start))
 
         accuracy = calculate_accuracy(Z_n, Y, architecture)
-
-        print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
-        print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
         
-        return parameters
+        train_acc = accuracy.eval({X: X_train, Y: Y_train})
+        test_acc= accuracy.eval({X: X_test, Y: Y_test})
+        print ("Train Accuracy:", train_acc )
+        print ("Test Accuracy:", test_acc)
+        
+        return parameters, train_acc, test_acc
 ```
 
 ```python
+learning_rates = [0.0001, 0.001, 0.01, 0.1]
+epochs = [1, 3, 5, 10, 50, 100]
+minibatch_sizes = [16, 32, 64,128]
 
-params = model(X_train, y_train, X_test, y_test, NN_ARCHITECTURE,num_epochs=1000)
+results = []#pd.DataFrame(columns=["learning_rate","epochs","minibatch_size"])
+
+for l in learning_rates:
+    tmp=[]
+    for m in minibatch_sizes:
+        params, train,test = model(X_train, y_train, X_test, y_test
+           ,NN_ARCHITECTURE, num_epochs=10
+           ,learning_rate=l, minibatch_size=m)
+        tmp.append((train,test))
+    results.append(tmp)
+```
+
+```python
+[x[0] for x in results]
+
+```
+
+```python
+results
+```
+
+```python
+plt.plot(learning_rates,[x[:][0] for x in results])
 ```
 
 **Question:**  
 Play around with the architecture, (i.e. add another layer), learning rate, epochs, ... as far the your computer allows it. Did you find a constellation, that gives a better result? 
 
-```python
 
-```
+If we set the learning rate lower, for example to 0.00005, theoretically the accuracy should improve, because the gradient descent descends more slowly and precisely. <br>
+Small mini-batches learn quicker, but larger mini-batches should perform better over time. Therefore, we increased the mini-batch size to 128 and it improved the results. Decresing the mini-batch size worsened the results. <br>
+Changing the activation function of the last layer from softmax to sigmoid improved the results quiet strongly. <br>
+Decreasing the number of epochs didn't worsen the outcome, as the algorithm converges quite soon. Especially when the learning rate was increased to speed up training.<br>
+For example, when we trained with the learning rate 0.01, just 3 epochs, and mini-batch size 128 the test accuracy was 0.858. The net had only input layer and output layer. The activation of the output layer was sigmoid.
+Increasing the number of epochs from 3 to 300 increases the test accuracy only by 0.1, yielding 0.8648. The Training accuracy is then by 0.872.
+
 
 Congratulations, you made it through the seventh tutorial of this course!
 
