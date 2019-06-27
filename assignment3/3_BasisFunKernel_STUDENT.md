@@ -480,9 +480,9 @@ Compute the kernel matrix `K_linear`, for the data matrix `X_train`:
 #Student version
 
 K_linear = np.dot(X_train, np.transpose(X_train))
-
+a = get_a(K_linear, 0.01, y_train)[0]
 print('shape:     {}'.format(K_linear.shape))
-print('a1: {}'.format(get_a(K_linear, 0.01, y_train)[0]))
+print('a1: {}'.format(a))
 assert_almost_equal(K_linear.shape, (802, 802), 1, "shape does not match expected value")
 assert_almost_equal(a, [-6.00066083] , 8, "al does not match expected value")
 ```
@@ -535,7 +535,7 @@ def tune_kernel_regression(X_train, y_train, X_valid, y_valid, L, metric='linear
     for lambd in L:
         a = get_a(K, lambd, y_train)  
         k_xstar = pairwise_kernels(X_valid, X_train, metric=metric)
-        y_hat_train = K.T.dot(a)
+        y_hat_train = K.dot(a)
         y_hat_valid = k_xstar.dot(a)
         
         train_err = rmse(y_train, y_hat_train)
