@@ -328,7 +328,7 @@ import time
 
 start = time.time()
 cnn.compile(optimizer=Adam(lr=0.0005), loss=categorical_crossentropy, metrics=['accuracy'])
-history = cnn.fit(X_train_rs, y_train, epochs=100, batch_size=128,
+history = cnn.fit(X_train_rs, y_train, epochs=50, batch_size=128,
                   validation_data=(X_valid_rs, y_valid), shuffle=True
                  ,verbose=False)
 end = time.time()
@@ -362,17 +362,28 @@ A few notes on the competition:
 
 ```python
 # STUDENT
-
+from tensorflow.keras.layers import BatchNormalization
 def get_cnn4Comp(input_shape=(28,28,3), n_classes=8):
     model = Sequential()    
-    model.add(Conv2D(32,3,input_shape=input_shape))
+    
+    model.add(Conv2D(32,3,input_shape=input_shape, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(2))
-    model.add(Conv2D(64,2,input_shape=input_shape))
+    
+    model.add(Conv2D(64,2,input_shape=input_shape, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(BatchNormalization())
     model.add(MaxPooling2D(2))
-    model.add(Conv2D(64,2,input_shape=input_shape))
+    
+    model.add(Conv2D(64,2,input_shape=input_shape, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(BatchNormalization())
+    
     model.add(Flatten())
-    model.add(Dense(16, activation = "relu"))
+    
+    model.add(Dense(128, activation = "relu", kernel_regularizer=regularizers.l2(0.001)))
     model.add(Dropout(0.5))
+    model.add(Dense(64, activation = "relu", kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Dropout(0.5))
+    model.add(Dense(32, activation = "relu", kernel_regularizer=regularizers.l2(0.001)))
     model.add(Dense(n_classes, activation ="softmax"))
     
     return model
@@ -389,15 +400,20 @@ comp_model.summary(line_length=140)
 ```
 
 ```python
-comp_model.compile()
 start = time.time()
-cnn.compile(optimizer=Adam(lr=0.0005), loss=categorical_crossentropy, metrics=['accuracy'])
+from tensorflow.keras.optimizers import SGD
+comp_model.compile(optimizer=SGD(lr=0.001), loss=categorical_crossentropy, metrics=['accuracy'])
 history_comp = comp_model.fit(X_train_rs, y_train,
-                  epochs=100, batch_size=128,
+                  epochs=300, batch_size=128,
                   validation_data=(X_valid_rs, y_valid), shuffle=True
-                 ,verbose=False)
+                 ,verbose=1)
 end = time.time()
 print(end - start)
+plothistory(history_comp)
+```
+
+```python
+print('CNN Performance: {:.4f}'.format(np.mean(history_comp.history['val_acc'][-4:])))
 ```
 
 ```python
@@ -407,6 +423,7 @@ X_competition = X_competition.reshape(-1,28,28,3) # reshape the data as we did a
 
 predictions = comp_model.predict(X_competition) # do this after fitting your model of course
 np.save('predictions.npy', predictions)
+comp_model.save("percent-baby.h5")
 ```
 
 Just in case you are wondering: We kept the y_test arraym with the ground truth for ourselves. We will compare your predictions with this ground truth and see which team's predictions were most accurate :-D 
