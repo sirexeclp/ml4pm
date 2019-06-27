@@ -5,7 +5,7 @@ jupyter:
       extension: .md
       format_name: markdown
       format_version: '1.1'
-      jupytext_version: 1.1.1
+      jupytext_version: 1.1.6
   kernelspec:
     display_name: Python 3
     language: python
@@ -38,16 +38,19 @@ We created this notebook on MacOS with `keras 2.1.6`, `tensorflow 1.6.0` and `py
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
-import keras
+from tensorflow import keras
+import tensorflow as tf
 
-from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, GlobalMaxPool2D, Dropout
-from keras.losses import categorical_crossentropy
-from keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, GlobalMaxPool2D, Dropout
+from tensorflow.keras.losses import categorical_crossentropy
+from tensorflow.keras.models import Sequential
 
-from keras.optimizers import Adam
-from keras import regularizers
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import regularizers
 
 from sklearn.model_selection import train_test_split
+print(f"tensorflow:\t{tf.__version__}")
+print(f"keras:\t\t{keras.__version__}")
 ```
 
 ## Preprocessing  the data
@@ -86,7 +89,8 @@ For example, to build a softmax regression classifier with l2-regularization, we
 
 ```python
 ridgemodel = keras.Sequential()
-ridgemodel.add(Dense(8, activation='softmax', input_shape=(2352,), kernel_regularizer=regularizers.l2(0.001))) # 2352 input features, 8 output features
+ridgemodel.add(Dense(8, activation='softmax', input_shape=(X.shape[1],),
+                     kernel_regularizer=regularizers.l2(0.001))) # 2352 input features, 8 output features
 ```
 
 Before you can train the model, it has to be compiled with an optimizer that will adjust the weights after each round:
@@ -114,7 +118,9 @@ Keras models are trained with the gradient descent algorithm, for which there ar
 Now we fit our model, by passing the training data in batches, and train for 100 epochs. 
 
 ```python
-history = ridgemodel.fit(X_train, y_train, batch_size=128, epochs=100, shuffle=True, validation_data=(X_valid, y_valid), verbose=0)
+history = ridgemodel.fit(X_train, y_train, batch_size=128,
+                         epochs=100, shuffle=True,
+                         validation_data=(X_valid, y_valid),verbose=False)
 ```
 
 And we write a function to look at our training results
@@ -133,6 +139,10 @@ def plothistory(h, metric='acc'):
     plt.legend(loc='lower right')
     plt.xlabel('epoch')
 
+```
+
+```python
+plothistory(history)
 ```
 
 ```python
@@ -157,8 +167,13 @@ Hint: Sequential(), add(Dense()), ...
 
 def get_fully_connected(input_shape=(2352,), n_classes=8):
     
-    model = #your_code
-    
+    model = keras.Sequential()
+    model.add(Dense(50, activation='relu', input_shape=input_shape))
+    #model.add(Dropout(0.5))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(50, activation='relu'))
+    model.add(Dense(8, activation='softmax'))
     #your_code
     
     return model
@@ -202,7 +217,8 @@ fcnet.compile(Adam(lr=0.0005), 'categorical_crossentropy', metrics=['accuracy'])
 Let's get the training started...
 
 ```python
-history = fcnet.fit(X_train, y_train, batch_size=128, epochs=50, shuffle=True, validation_data=(X_valid, y_valid), verbose=1)
+history = fcnet.fit(X_train, y_train, batch_size=128, epochs=50, shuffle=True,
+                    validation_data=(X_valid, y_valid), verbose=0)
 ```
 
 ```python
@@ -258,9 +274,16 @@ Now implement a convolutional neural network model. Try different numbers of lay
 
 def get_cnn(input_shape=(28,28,3), n_classes=8):
         
-    model = #your_code
-        
-    #your_code
+    model = Sequential()    
+    model.add(Conv2D(32,3,input_shape=input_shape))
+    model.add(MaxPooling2D(2))
+    model.add(Conv2D(64,2,input_shape=input_shape))
+    model.add(MaxPooling2D(2))
+    model.add(Conv2D(64,2,input_shape=input_shape))
+    model.add(Flatten())
+    model.add(Dense(16, activation = "relu"))
+    #model.add(Dropout(0.5))
+    model.add(Dense(n_classes, activation ="softmax"))
     
     return model
 ```
@@ -301,15 +324,23 @@ _______________________________________________________________________________
 <!-- #endregion -->
 
 ```python
-cnn.compile(optimizer=Adam(lr=0.0005), loss=categorical_crossentropy, metrics=['accuracy'])
-history = cnn.fit(X_train_rs, y_train, epochs=50, batch_size=128, validation_data=(X_valid_rs, y_valid), shuffle=True)
+import time
 
+start = time.time()
+cnn.compile(optimizer=Adam(lr=0.0005), loss=categorical_crossentropy, metrics=['accuracy'])
+history = cnn.fit(X_train_rs, y_train, epochs=100, batch_size=128,
+                  validation_data=(X_valid_rs, y_valid), shuffle=True
+                 ,verbose=False)
+end = time.time()
+print(end - start)
+    
 # this can take long to run ( ~2 minutes on a MacBook pro with an i7 and our proposed architecture above)
+# 11 seconds on gtx1060 ca 1 minute on cpu
 ```
 
 ```python
 plothistory(history)
-print('CNN Performance: {}'.format(np.mean(history.history['val_acc'][-4:])))
+print('CNN Performance: {:.4f}'.format(np.mean(history.history['val_acc'][-4:])))
 ```
 
 ## A Note on Regularization
@@ -333,10 +364,16 @@ A few notes on the competition:
 # STUDENT
 
 def get_cnn4Comp(input_shape=(28,28,3), n_classes=8):
-        
-    model = #your_code
-        
-    #your_code
+    model = Sequential()    
+    model.add(Conv2D(32,3,input_shape=input_shape))
+    model.add(MaxPooling2D(2))
+    model.add(Conv2D(64,2,input_shape=input_shape))
+    model.add(MaxPooling2D(2))
+    model.add(Conv2D(64,2,input_shape=input_shape))
+    model.add(Flatten())
+    model.add(Dense(16, activation = "relu"))
+    model.add(Dropout(0.5))
+    model.add(Dense(n_classes, activation ="softmax"))
     
     return model
 ```
@@ -348,8 +385,19 @@ comp_model = get_cnn4Comp()
 
 # Call model.summary() and paste the text into your submission on moodle:
 comp_model.summary(line_length=140)
-# comp_model.compile()
-# comp_model.fit() 
+
+```
+
+```python
+comp_model.compile()
+start = time.time()
+cnn.compile(optimizer=Adam(lr=0.0005), loss=categorical_crossentropy, metrics=['accuracy'])
+history_comp = comp_model.fit(X_train_rs, y_train,
+                  epochs=100, batch_size=128,
+                  validation_data=(X_valid_rs, y_valid), shuffle=True
+                 ,verbose=False)
+end = time.time()
+print(end - start)
 ```
 
 ```python
