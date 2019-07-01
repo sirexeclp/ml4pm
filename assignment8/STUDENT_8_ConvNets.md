@@ -1,6 +1,7 @@
 ---
 jupyter:
   jupytext:
+    formats: ipynb,md
     text_representation:
       extension: .md
       format_name: markdown
@@ -49,6 +50,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import regularizers
 
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import load_model
 print(f"tensorflow:\t{tf.__version__}")
 print(f"keras:\t\t{keras.__version__}")
 ```
@@ -335,7 +337,9 @@ end = time.time()
 print(end - start)
     
 # this can take long to run ( ~2 minutes on a MacBook pro with an i7 and our proposed architecture above)
-# 11 seconds on gtx1060 ca 1 minute on cpu
+# ~12 seconds on gtx1060
+# ~1 minute on cpu
+# ~8 seconds on 4xTesla V100
 ```
 
 ```python
@@ -366,25 +370,75 @@ from tensorflow.keras.layers import BatchNormalization
 def get_cnn4Comp(input_shape=(28,28,3), n_classes=8):
     model = Sequential()    
     
-    model.add(Conv2D(32,3,input_shape=input_shape, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Conv2D(32,3,input_shape=input_shape
+                     #, kernel_regularizer=regularizers.l2(0.001)
+                    ))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(2))
     
-    model.add(Conv2D(64,2,input_shape=input_shape, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Conv2D(64,2,input_shape=input_shape
+                     #, kernel_regularizer=regularizers.l2(0.001)
+                    ))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(2))
     
-    model.add(Conv2D(64,2,input_shape=input_shape, kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Conv2D(64,2,input_shape=input_shape
+                    # , kernel_regularizer=regularizers.l2(0.001)
+                    ))
     model.add(BatchNormalization())
     
     model.add(Flatten())
     
-    model.add(Dense(128, activation = "relu", kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Dense(128, activation = "relu", activity_regularizer=regularizers.l2(0.001)))
     model.add(Dropout(0.5))
-    model.add(Dense(64, activation = "relu", kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Dense(64, activation = "relu", activity_regularizer=regularizers.l2(0.001)))
     model.add(Dropout(0.5))
-    model.add(Dense(32, activation = "relu", kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Dense(32, activation = "relu", activity_regularizer=regularizers.l2(0.001)))
     model.add(Dense(n_classes, activation ="softmax"))
+    
+    return model
+```
+
+```python
+
+def get_cnn4Comp(input_shape=(28,28,3), n_classes=8):
+    # dropout: https://machinelearningmastery.com/dropout-regularization-deep-learning-models-keras/
+    # Conv2D, MaxPooling2D, Dense, Flatten, GlobalMaxPool2D, Dropout
+    model = keras.Sequential()
+    
+    model.add(Conv2D(32, kernel_size=3, activation='relu', input_shape=input_shape
+                    , kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Dropout(rate=0.4))
+    model.add(MaxPooling2D())
+    
+    model.add(Conv2D(64, kernel_size=2, activation='relu'
+                    # , kernel_regularizer=regularizers.l2(0.001)
+                    ))
+    model.add(MaxPooling2D())
+    #model.add(GlobalMaxPool2D())
+    
+    model.add(Conv2D(64, kernel_size=2, activation='relu'
+                    # ,kernel_regularizer=regularizers.l2(0.001)
+                    ))
+    model.add(Dropout(rate=0.3))
+    #model.add(MaxPooling2D())
+    
+    model.add(Conv2D(64, kernel_size=2, activation='relu'
+                    # ,kernel_regularizer=regularizers.l2(0.001)
+                    ))
+    model.add(Dropout(rate=0.4))
+    #model.add(MaxPooling2D())
+    # flatten better than globalmaxpool
+    
+    model.add(Flatten())
+    #model.add(GlobalMaxPool2D())
+    model.add(Dropout(0.5))
+    model.add(Dense(128, activation = "relu", activity_regularizer=regularizers.l2(0.000001)))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu', activity_regularizer=regularizers.l2(0.000001)))
+    model.add(Dropout(rate=0.5))
+    model.add(Dense(16, activation='relu'))
+    model.add(Dense(n_classes, activation='softmax'))
     
     return model
 ```
@@ -392,28 +446,28 @@ def get_cnn4Comp(input_shape=(28,28,3), n_classes=8):
 Once you have trained your final model, please adapt the code-snippets below to create your submission. If you submit any other format than `.npy` and the shape of the array is different than (500, 8), we will not process your submission. **Please also call model.summmary() and paste the text into the text field of your submission!**. As always also submit the notebook itself.
 
 ```python
-comp_model = get_cnn4Comp()
-
+#comp_model = get_cnn4Comp()
+comp_model = load_model("82percent.h5")
 # Call model.summary() and paste the text into your submission on moodle:
 comp_model.summary(line_length=140)
-
 ```
 
 ```python
 start = time.time()
 from tensorflow.keras.optimizers import SGD
-comp_model.compile(optimizer=SGD(lr=0.001), loss=categorical_crossentropy, metrics=['accuracy'])
-history_comp = comp_model.fit(X_train_rs, y_train,
-                  epochs=300, batch_size=128,
-                  validation_data=(X_valid_rs, y_valid), shuffle=True
-                 ,verbose=1)
+#comp_model.compile(optimizer=Adam(lr=0.0001), loss=categorical_crossentropy, metrics=['accuracy'])
+#history_comp = comp_model.fit(X_train_rs, y_train,
+#                  epochs=200, batch_size=256,
+#                  validation_data=(X_valid_rs, y_valid), shuffle=True
+#                 ,verbose=1)
 end = time.time()
 print(end - start)
-plothistory(history_comp)
+#plothistory(history_comp)
 ```
 
 ```python
-print('CNN Performance: {:.4f}'.format(np.mean(history_comp.history['val_acc'][-4:])))
+#print('CNN Performance: {:.4f}'.format(np.mean(history_comp.history['val_acc'][-4:])))
+#plothistory(history_comp)
 ```
 
 ```python
@@ -423,7 +477,6 @@ X_competition = X_competition.reshape(-1,28,28,3) # reshape the data as we did a
 
 predictions = comp_model.predict(X_competition) # do this after fitting your model of course
 np.save('predictions.npy', predictions)
-comp_model.save("percent-baby.h5")
 ```
 
 Just in case you are wondering: We kept the y_test arraym with the ground truth for ourselves. We will compare your predictions with this ground truth and see which team's predictions were most accurate :-D 
